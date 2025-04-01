@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MessageList from '@/components/chat/MessageList';
 import MessageInput from '@/components/chat/MessageInput';
-import ConfigDialog from '@/components/chat/ConfigDialog';
 import { getRestaurantData } from '@/lib/googleSheets';
 import { sendMessageToGPT } from '@/lib/openai';
 import { Message, Restaurant } from '@/types/chat';
@@ -20,29 +19,8 @@ const Chat = () => {
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
-  const [showConfigDialog, setShowConfigDialog] = useState(false);
-  const [sheetId, setSheetId] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const googleSheetId = localStorage.getItem('google_sheet_id');
-    
-    if (!googleSheetId) {
-      setShowConfigDialog(true);
-    }
-  }, []);
-
-  const saveSheetId = () => {
-    if (sheetId.trim()) {
-      localStorage.setItem('google_sheet_id', sheetId.trim());
-      setShowConfigDialog(false);
-      toast({
-        title: "Settings saved",
-        description: "Your Google Sheet ID has been saved successfully.",
-      });
-    }
-  };
 
   const handleSendMessage = async (content: string) => {
     const userMessage: Message = {
@@ -54,14 +32,6 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
-      // Check if Google Sheet ID is set
-      const googleSheetId = localStorage.getItem('google_sheet_id');
-      
-      if (!googleSheetId) {
-        setShowConfigDialog(true);
-        throw new Error('Google Sheet ID not set');
-      }
-
       const restaurants = await getRestaurantData();
       
       const response = await sendMessageToGPT(userMessage.content, messages, restaurants);
@@ -74,25 +44,17 @@ const Chat = () => {
     } catch (error) {
       console.error('Error processing message:', error);
       
-      if (error.message === 'Google Sheet ID not set') {
-        setMessages(prev => [...prev, {
-          id: (Date.now() + 1).toString(),
-          content: "I need access to restaurant data to help you. Please provide a Google Sheet ID in the settings.",
-          role: 'assistant'
-        }]);
-      } else {
-        setMessages(prev => [...prev, {
-          id: (Date.now() + 1).toString(),
-          content: `I'm sorry, I encountered an error. ${error.message}`,
-          role: 'assistant'
-        }]);
-        
-        toast({
-          title: "Error",
-          description: "Failed to get a response. Please try again.",
-          variant: "destructive",
-        });
-      }
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        content: `I'm sorry, I encountered an error. ${error.message}`,
+        role: 'assistant'
+      }]);
+      
+      toast({
+        title: "Error",
+        description: "Failed to get a response. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -110,14 +72,6 @@ const Chat = () => {
         </div>
       </main>
       <Footer />
-
-      <ConfigDialog 
-        open={showConfigDialog} 
-        setOpen={setShowConfigDialog}
-        sheetId={sheetId}
-        setSheetId={setSheetId}
-        onSave={saveSheetId}
-      />
     </div>
   );
 };

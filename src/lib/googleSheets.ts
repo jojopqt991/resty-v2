@@ -2,18 +2,15 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Restaurant } from '@/types/chat';
 
-export async function getRestaurantData(): Promise<Restaurant[]> {
-  // Get the spreadsheet ID from localStorage
-  // We still need this client-side since it can be set by the user
-  const spreadsheetId = localStorage.getItem('google_sheet_id');
-  
-  if (!spreadsheetId) {
-    console.error('Missing configuration: Google Sheet ID not set');
-    throw new Error('Google Sheet ID not set');
-  }
+// Default Google Sheet ID
+const DEFAULT_SHEET_ID = '1cIyJyPBm5i7ux7RLYIDBkXpJVjzDDiR0BrANuDKaJn0';
 
+export async function getRestaurantData(): Promise<Restaurant[]> {
   try {
     console.log('Calling Google Sheets edge function...');
+    
+    // Use the default spreadsheet ID
+    const spreadsheetId = DEFAULT_SHEET_ID;
     
     // Call our edge function to securely fetch the Google Sheets data
     const { data, error } = await supabase.functions.invoke('google-sheets', {
