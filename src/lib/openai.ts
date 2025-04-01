@@ -1,3 +1,4 @@
+
 import { Message, Restaurant, RestaurantCriteria } from '@/types/chat';
 
 // Function to extract restaurant criteria from user message
@@ -28,7 +29,10 @@ Return ONLY a JSON object with these fields. Do not include any explanation or o
 Example output: {"area":"Soho","cuisine":"Italian","priceLevel":"moderate","timeOfDay":"dinner","dayOfWeek":"Friday","partySize":4,"needsReservation":true}
 For any criteria not mentioned in the conversation, use null for that field.
 
-Important: Keep area and cuisine values very simple. For area, use neighborhood names only. For cuisine, use broad categories like "Italian", "Chinese", "Japanese", etc.`;
+IMPORTANT: Keep area and cuisine values EXTREMELY simple. 
+- For area, use ONLY neighborhood names like "Soho", "Islington", "Chelsea", etc. 
+- For cuisine, use ONLY broad categories like "Italian", "Chinese", "Japanese", etc.
+- Do not use phrases or qualifiers, just the plain area or cuisine name.`;
 
     // Prepare messages for the API call
     const messages = [
@@ -85,6 +89,16 @@ Important: Keep area and cuisine values very simple. For area, use neighborhood 
         } else {
           // Return empty object if no JSON-like structure found
           return {};
+        }
+      }
+
+      // Normalize criteria values to improve matching
+      if (criteriaObject) {
+        if (criteriaObject.area) {
+          criteriaObject.area = criteriaObject.area.trim();
+        }
+        if (criteriaObject.cuisine) {
+          criteriaObject.cuisine = criteriaObject.cuisine.trim();
         }
       }
 

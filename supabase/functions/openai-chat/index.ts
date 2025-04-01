@@ -39,10 +39,13 @@ serve(async (req) => {
       let filteredRestaurants = restaurants;
       
       if (criteria) {
+        // Log original restaurant count
+        console.log(`Starting with ${restaurants.length} restaurants`);
+        
         // Filter by area if specified
         if (criteria.area && criteria.area !== null) {
           const areaLower = criteria.area.toLowerCase();
-          console.log(`Filtering by area: ${areaLower}`);
+          console.log(`Filtering by area: "${areaLower}"`);
           
           // First, log all available areas to debug
           const uniqueAreas = new Set();
@@ -52,48 +55,117 @@ serve(async (req) => {
           });
           console.log(`Available areas in database: ${Array.from(uniqueAreas).join(', ')}`);
           
-          filteredRestaurants = filteredRestaurants.filter(r => {
-            const areaMatch = (r.area && r.area.toLowerCase().includes(areaLower)) ||
-                            (r.neighborhood && r.neighborhood.toLowerCase().includes(areaLower));
-            if (areaMatch) {
-              console.log(`Area match: ${r.name} - ${r.area || r.neighborhood}`);
-            }
-            return areaMatch;
+          // More flexible matching - try exact match first, then contains
+          let exactMatches = filteredRestaurants.filter(r => {
+            const areaExactMatch = 
+              (r.area && r.area.toLowerCase() === areaLower) ||
+              (r.neighborhood && r.neighborhood.toLowerCase() === areaLower);
+            
+            return areaExactMatch;
           });
+          
+          // If no exact matches, try partial matches
+          if (exactMatches.length === 0) {
+            filteredRestaurants = filteredRestaurants.filter(r => {
+              const areaMatch = 
+                (r.area && r.area.toLowerCase().includes(areaLower)) ||
+                (r.neighborhood && r.neighborhood.toLowerCase().includes(areaLower));
+              
+              if (areaMatch) {
+                console.log(`Area match: ${r.name} - ${r.area || r.neighborhood}`);
+              }
+              return areaMatch;
+            });
+          } else {
+            filteredRestaurants = exactMatches;
+            console.log(`Found ${exactMatches.length} exact area matches`);
+          }
+          
           console.log(`After area filter: ${filteredRestaurants.length} restaurants`);
         }
         
         // Filter by cuisine if specified
-        if (criteria.cuisine && criteria.cuisine !== null) {
+        if (criteria.cuisine && criteria.cuisine !== null && filteredRestaurants.length > 0) {
           const cuisineLower = criteria.cuisine.toLowerCase();
-          console.log(`Filtering by cuisine: ${cuisineLower}`);
+          console.log(`Filtering by cuisine: "${cuisineLower}"`);
           
           // First, log some available cuisines to debug
           const uniqueCuisines = new Set();
-          restaurants.slice(0, 20).forEach(r => {
+          restaurants.slice(0, 50).forEach(r => {
             if (r.primary_type) uniqueCuisines.add(r.primary_type.toLowerCase());
             if (r.types) {
               r.types.toLowerCase().split(',').map(t => t.trim()).forEach(t => uniqueCuisines.add(t));
             }
           });
-          console.log(`Sample cuisines in database: ${Array.from(uniqueCuisines).join(', ')}`);
+          console.log(`Sample cuisines in database: ${Array.from(uniqueCuisines).slice(0, 30).join(', ')}`);
           
-          filteredRestaurants = filteredRestaurants.filter(r => {
-            const cuisineMatch = (r.primary_type && r.primary_type.toLowerCase().includes(cuisineLower)) ||
-                                (r.types && r.types.toLowerCase().includes(cuisineLower));
-            if (cuisineMatch) {
-              console.log(`Cuisine match: ${r.name} - ${r.primary_type || r.types}`);
-            }
-            return cuisineMatch;
+          // More flexible matching - try exact match first, then contains
+          let exactMatches = filteredRestaurants.filter(r => {
+            const cuisineExactMatch = 
+              (r.primary_type && r.primary_type.toLowerCase() === cuisineLower) ||
+              (r.types && r.types.toLowerCase().split(',').some(t => t.trim().toLowerCase() === cuisineLower));
+            
+            return cuisineExactMatch;
           });
+          
+          // If no exact matches, try partial matches
+          if (exactMatches.length === 0) {
+            filteredRestaurants = filteredRestaurants.filter(r => {
+              const cuisineMatch = 
+                (r.primary_type && r.primary_type.toLowerCase().includes(cuisineLower)) ||
+                (r.types && r.types.toLowerCase().includes(cuisineLower));
+              
+              if (cuisineMatch) {
+                console.log(`Cuisine match: ${r.name} - ${r.primary_type || r.types}`);
+              }
+              return cuisineMatch;
+            });
+          } else {
+            filteredRestaurants = exactMatches;
+            console.log(`Found ${exactMatches.length} exact cuisine matches`);
+          }
+          
           console.log(`After cuisine filter: ${filteredRestaurants.length} restaurants`);
         }
 
-        // If we still have too many restaurants after filtering, take the first 3 for real recommendations
-        if (filteredRestaurants.length > 3) {
-          filteredRestaurants = filteredRestaurants.slice(0, 3);
+        // If we have no matches but had criteria, this means our filtering is too strict 
+        if (filteredRestaurants.length === 0 && (criteria.area || criteria.cuisine)) {
+          console.log('No restaurants matched strict criteria, trying more flexible matching...');
+          
+          // Try again with more flexible matching
+          filteredRestaurants = restaurants;
+          
+          if (criteria.area) {
+            const areaWords = criteria.area.toLowerCase().split(/\s+/);
+            filteredRestaurants = filteredRestaurants.filter(r => {
+              if (!r.area && !r.neighborhood) return false;
+              
+              // Check if any word in area matches
+              const areaText = ((r.area || '') + ' ' + (r.neighborhood || '')).toLowerCase();
+              return areaWords.some(word => word.length > 2 && areaText.includes(word));
+            });
+          }
+          
+          if (criteria.cuisine && filteredRestaurants.length > 0) {
+            const cuisineWords = criteria.cuisine.toLowerCase().split(/\s+/);
+            filteredRestaurants = filteredRestaurants.filter(r => {
+              if (!r.primary_type && !r.types) return false;
+              
+              // Check if any word in cuisine matches
+              const cuisineText = ((r.primary_type || '') + ' ' + (r.types || '')).toLowerCase();
+              return cuisineWords.some(word => word.length > 2 && cuisineText.includes(word));
+            });
+          }
+          
+          console.log(`After flexible matching: ${filteredRestaurants.length} restaurants`);
+        }
+        
+        // If we still have too many restaurants after filtering, take a representative sample
+        if (filteredRestaurants.length > 5) {
+          filteredRestaurants = filteredRestaurants.slice(0, 5);
+          console.log(`Limited to 5 representative restaurants`);
         } else if (filteredRestaurants.length === 0) {
-          // If no matches after filtering, fall back to unfiltered but limited list
+          // If no matches after all filtering, fall back to unfiltered but limited list
           console.log('No restaurants matched the criteria, falling back to random selection');
           filteredRestaurants = restaurants.slice(0, 3);
         }
