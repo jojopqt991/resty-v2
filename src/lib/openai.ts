@@ -1,4 +1,3 @@
-
 import { Message, Restaurant, RestaurantCriteria } from '@/types/chat';
 
 // Function to extract restaurant criteria from user message
@@ -60,7 +59,25 @@ For any criteria not mentioned in the conversation, omit that field from the JSO
     
     try {
       // Parse the response as JSON
-      const criteriaObject = JSON.parse(data.content);
+      let criteriaObject;
+      try {
+        criteriaObject = JSON.parse(data.content);
+      } catch (e) {
+        console.error("Failed to parse criteria JSON:", data.content);
+        // If the content is not valid JSON, attempt to extract JSON from it
+        const jsonMatch = data.content.match(/\{.*\}/s);
+        if (jsonMatch) {
+          try {
+            criteriaObject = JSON.parse(jsonMatch[0]);
+          } catch (e2) {
+            // Return empty object if all parsing fails
+            return {};
+          }
+        } else {
+          // Return empty object if no JSON-like structure found
+          return {};
+        }
+      }
       return criteriaObject as RestaurantCriteria;
     } catch (e) {
       console.error("Failed to parse criteria JSON:", data.content);

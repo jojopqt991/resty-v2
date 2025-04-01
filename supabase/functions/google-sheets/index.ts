@@ -30,9 +30,10 @@ serve(async (req) => {
 
     console.log('Fetching Google Sheets data, spreadsheet ID:', spreadsheetId);
     
-    // Fix the range format - using 'A1:Z1000' instead of 'A:Z'
+    // Use the gid parameter to specify the correct sheet
+    // For gid=1649613619, we need to use the sheet name or index
     const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A1:Z1000?key=${GOOGLE_SHEETS_API_KEY}`
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A1:Z1000?key=${GOOGLE_SHEETS_API_KEY}`
     );
 
     if (!response.ok) {
