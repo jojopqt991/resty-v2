@@ -21,7 +21,7 @@ serve(async (req) => {
       throw new Error('Missing OpenAI API key');
     }
 
-    const { messages, restaurants } = await req.json();
+    const { messages, restaurants, criteria } = await req.json();
     
     if (!messages || !Array.isArray(messages)) {
       throw new Error('Invalid request format');
@@ -33,53 +33,79 @@ serve(async (req) => {
     let processedRestaurants = restaurants;
     
     // If we have restaurant data and need to reduce tokens
-    if (restaurants && Array.isArray(restaurants) && restaurants.length > 10) {
+    if (restaurants && Array.isArray(restaurants) && restaurants.length > 3) {
+      // Filter restaurants based on criteria if available
+      let filteredRestaurants = restaurants;
+      
+      if (criteria) {
+        // Filter by area if specified
+        if (criteria.area) {
+          filteredRestaurants = filteredRestaurants.filter(r => 
+            r.area && r.area.toLowerCase().includes(criteria.area.toLowerCase())
+          );
+        }
+        
+        // Filter by cuisine if specified
+        if (criteria.cuisine) {
+          filteredRestaurants = filteredRestaurants.filter(r => 
+            (r.primary_type && r.primary_type.toLowerCase().includes(criteria.cuisine.toLowerCase())) ||
+            (r.types && r.types.toLowerCase().includes(criteria.cuisine.toLowerCase()))
+          );
+        }
+
+        // If we still have too many restaurants after filtering, take the first 3 for the real recommendations
+        if (filteredRestaurants.length > 3) {
+          filteredRestaurants = filteredRestaurants.slice(0, 3);
+        } else if (filteredRestaurants.length === 0) {
+          // If no matches after filtering, fall back to unfiltered but limited list
+          filteredRestaurants = restaurants.slice(0, 3);
+        }
+      } else {
+        // No criteria, just take first 3
+        filteredRestaurants = restaurants.slice(0, 3);
+      }
+      
       // Extract essential fields only to reduce token count
-      processedRestaurants = restaurants.map(restaurant => ({
+      processedRestaurants = filteredRestaurants.map(restaurant => ({
         id: restaurant.id,
         name: restaurant.name,
         area: restaurant.area,
         neighborhood: restaurant.neighborhood,
         primary_type: restaurant.primary_type,
         types: restaurant.types,
-        hours: restaurant.hours,
-        rating: restaurant.rating,
-        price_level: restaurant.price_level,
-        reservable: restaurant.reservable,
-        phone: restaurant.phone
+        price_level: restaurant.price_level
       }));
       
-      // If we still have too many restaurants, limit to 50
-      if (processedRestaurants.length > 50) {
-        processedRestaurants = processedRestaurants.slice(0, 50);
-        console.log(`Reduced restaurants from ${restaurants.length} to 50 to save tokens`);
-      }
+      console.log(`Using ${processedRestaurants.length} filtered restaurants for recommendations`);
     }
     
     // Find system message and replace restaurant data if present
     const systemMessageIndex = messages.findIndex(msg => msg.role === 'system');
     let updatedMessages = [...messages];
     
-    if (systemMessageIndex !== -1 && processedRestaurants) {
+    if (systemMessageIndex !== -1) {
       // Replace the system prompt with one that doesn't include the full restaurant database
-      const originalSystemMessage = messages[systemMessageIndex].content;
+      const systemPrompt = `You are Resty, an AI restaurant concierge. Your job is to help users find restaurants based on their preferences. 
       
-      // Create a new system message without embedding all restaurant data
+I've analyzed the conversation and extracted these criteria from the user:
+${JSON.stringify(criteria, null, 2)}
+
+I've found ${processedRestaurants.length} real restaurants from our database that match the user's criteria. Here they are:
+${JSON.stringify(processedRestaurants, null, 2)}
+
+Your task:
+1. Format a nice response that recommends the real restaurants from our database
+2. Also suggest 2 additional fictional restaurants that would be perfect for the user based on their preferences
+3. Present all 5 recommendations in a nicely formatted numbered list (3 real + 2 AI-generated)
+4. For each restaurant, provide only the name and a brief 1-sentence description
+5. Make it conversational and engaging
+6. If the user hasn't provided enough criteria, ask follow-up questions to get more specific details
+
+Real restaurants should be presented first, followed by your AI-generated suggestions.`;
+
       updatedMessages[systemMessageIndex] = {
         role: 'system',
-        content: `You are Resty, an AI restaurant concierge. Your job is to help users find restaurants based on their preferences. 
-        You have access to ${processedRestaurants.length} restaurants to recommend.
-        
-        During your conversation with the user, gather information about:
-        1. Location (area) - Which area they want to dine in
-        2. Food type/cuisine - What cuisine they're interested in
-        3. Time of day - When they want to dine
-        4. Day of the week - Which day they plan to visit
-        5. Number of people in their party
-        6. Price level preference (optional)
-        7. Whether they need reservations (optional)
-        
-        Be conversational and helpful. Ask questions to get the information you need.`
+        content: systemPrompt
       };
     }
     

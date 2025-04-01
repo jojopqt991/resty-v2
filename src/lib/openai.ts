@@ -120,8 +120,7 @@ During your conversation with the user, gather information about:
 6. Price level preference (optional)
 7. Whether they need reservations (optional)
 
-Be conversational and helpful. If you don't have enough information yet, ask follow-up questions to get the details you need.
-If you have enough information about what the user is looking for, suggest one or more restaurant options that match their criteria.`;
+Be conversational and helpful. If you don't have enough information yet, ask follow-up questions to get the details you need.`;
 
     // Prepare messages for the API call - only keep last few messages to reduce token count
     const messages = [
@@ -141,7 +140,8 @@ If you have enough information about what the user is looking for, suggest one o
       },
       body: JSON.stringify({
         messages: messages,
-        restaurants: restaurants
+        restaurants: restaurants,
+        criteria: criteria
       })
     });
 

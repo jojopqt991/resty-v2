@@ -22,6 +22,39 @@ const MessageList = ({ messages }: MessageListProps) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Function to format restaurant recommendations with better styling
+  const formatMessage = (content: string) => {
+    // Check if the message contains numbered restaurant recommendations
+    if (content.match(/\d+\.\s+[A-Za-z\s]+:/)) {
+      // Split the message by newlines
+      const lines = content.split('\n');
+      
+      const formattedLines = lines.map((line, index) => {
+        // Check if this line is a restaurant recommendation (starts with a number and period)
+        const restaurantMatch = line.match(/^(\d+\.\s+)([A-Za-z\s\-']+):(.*)/);
+        
+        if (restaurantMatch) {
+          // Extract the restaurant name and description
+          const [, number, name, description] = restaurantMatch;
+          return (
+            <div key={index} className="my-2">
+              <span className="font-bold">{number}</span>
+              <span className="font-bold text-resty-primary">{name}:</span>
+              <span>{description}</span>
+            </div>
+          );
+        }
+        
+        return <div key={index} className="my-1">{line}</div>;
+      });
+      
+      return <>{formattedLines}</>;
+    }
+    
+    // If no restaurant formatting needed, return as is
+    return content;
+  };
+
   return (
     <div className="flex-1 p-4 overflow-y-auto">
       {messages.map((message) => (
@@ -36,7 +69,7 @@ const MessageList = ({ messages }: MessageListProps) => {
                 : 'bg-gray-100 text-gray-800 rounded-tl-none'
             }`}
           >
-            {message.content}
+            {formatMessage(message.content)}
           </div>
         </div>
       ))}
