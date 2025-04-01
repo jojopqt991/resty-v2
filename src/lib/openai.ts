@@ -26,12 +26,12 @@ Analyze the conversation and extract the following criteria (if present):
 
 Return ONLY a JSON object with these fields. Do not include any explanation or other text.
 Example output: {"area":"Soho","cuisine":"Italian","priceLevel":"moderate","timeOfDay":"dinner","dayOfWeek":"Friday","partySize":4,"needsReservation":true}
-For any criteria not mentioned in the conversation, omit that field from the JSON.`;
+For any criteria not mentioned in the conversation, use null for that field.`;
 
     // Prepare messages for the API call
     const messages = [
       { role: "system", content: systemPrompt },
-      ...formattedPreviousMessages.slice(-10), // Only keep last 10 messages for context
+      ...formattedPreviousMessages.slice(-5), // Only keep last 5 messages for context
       { role: "user", content: message }
     ];
 
@@ -105,59 +105,34 @@ export async function sendMessageToGPT(
       content: msg.content
     }));
 
-    // Create system prompt with restaurant data and extracted criteria
+    // Create system prompt with criteria but not the full restaurant database
     const systemPrompt = `You are Resty, an AI restaurant concierge. Your job is to help users find restaurants based on their preferences.
-    
-Here is the database of restaurants you have access to:
-${JSON.stringify(restaurants, null, 2)}
 
 I've analyzed the conversation and extracted these criteria from the user:
 ${JSON.stringify(criteria, null, 2)}
 
-During your conversation with the user, ALWAYS gather the following information:
+During your conversation with the user, gather information about:
 1. Location (area) - Which area they want to dine in
-2. Food type (primary_type and types) - What cuisine they're interested in
+2. Food type/cuisine - What cuisine they're interested in
 3. Time of day - When they want to dine
 4. Day of the week - Which day they plan to visit
 5. Number of people in their party
+6. Price level preference (optional)
+7. Whether they need reservations (optional)
 
-Optional information that is helpful if you can gather:
-- Price level preference
-- Whether they need a place that takes reservations
+Be conversational and helpful. If you don't have enough information yet, ask follow-up questions to get the details you need.
+If you have enough information about what the user is looking for, suggest one or more restaurant options that match their criteria.`;
 
-PROCESS:
-1. Engage in conversation to gather all required information
-2. Once you have sufficient information, search the restaurant database for matches
-3. Filter restaurants by:
-   - Matching the area or nearby neighborhoods
-   - Matching the food type/cuisine
-   - Ensuring it's open on the requested day/time (check 'hours')
-   - Can accommodate the party size
-   - Matches price level and reservation requirements if specified
-4. Present 1-3 recommendations that best match their criteria
-
-When recommending restaurants:
-1. Always include the restaurant name, cuisine type, and neighborhood
-2. Mention relevant information like hours, rating, and whether reservation is needed
-3. Include a brief description of what makes this restaurant a good match
-4. Provide contact information for making reservations
-5. Be conversational and helpful
-
-If you don't have enough information yet, ask follow-up questions to get the details you need.
-If no restaurants match the exact criteria, suggest alternatives and explain why.
-
-Remember to be conversational and friendly throughout the interaction.`;
-
-    // Prepare messages for the API call
+    // Prepare messages for the API call - only keep last few messages to reduce token count
     const messages = [
       { role: "system", content: systemPrompt },
-      ...formattedPreviousMessages.slice(-10), // Only keep last 10 messages for context
+      ...formattedPreviousMessages.slice(-5), // Only keep last 5 messages for context
       { role: "user", content: message }
     ];
 
     console.log('Sending request to OpenAI edge function...');
 
-    // Call our edge function instead of OpenAI directly
+    // Call our edge function with both messages and restaurant data
     const response = await fetch('https://ajhbefztgrigzaddwvrb.supabase.co/functions/v1/openai-chat', {
       method: 'POST',
       headers: {
@@ -166,6 +141,7 @@ Remember to be conversational and friendly throughout the interaction.`;
       },
       body: JSON.stringify({
         messages: messages,
+        restaurants: restaurants
       })
     });
 

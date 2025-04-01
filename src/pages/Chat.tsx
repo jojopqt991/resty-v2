@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MessageList from '@/components/chat/MessageList';
@@ -19,8 +18,29 @@ const Chat = () => {
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [restaurantData, setRestaurantData] = useState<Restaurant[]>([]);
+  const [currentCriteria, setCurrentCriteria] = useState<RestaurantCriteria>({});
   const { toast } = useToast();
-  const navigate = useNavigate();
+
+  // Fetch restaurant data when component mounts
+  React.useEffect(() => {
+    const fetchRestaurants = async () => {
+      try {
+        const data = await getRestaurantData();
+        setRestaurantData(data);
+        console.log(`Loaded ${data.length} restaurants`);
+      } catch (error) {
+        console.error('Error loading restaurant data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load restaurant data. Some features may be limited.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    fetchRestaurants();
+  }, [toast]);
 
   const handleSendMessage = async (content: string) => {
     const userMessage: Message = {
@@ -32,15 +52,24 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
-      // First, use OpenAI to understand user requirements and extract criteria
-      const criteria = await extractRestaurantCriteria(userMessage.content, messages);
-      console.log("Extracted criteria:", criteria);
+      // First, extract criteria from the message
+      const extractedCriteria = await extractRestaurantCriteria(userMessage.content, messages);
+      console.log("Extracted criteria:", extractedCriteria);
       
-      // Then fetch restaurant data and filter it on the server
-      const restaurants = await getRestaurantData();
+      // Update our current criteria with any new information
+      const updatedCriteria = {
+        ...currentCriteria,
+        ...extractedCriteria
+      };
+      setCurrentCriteria(updatedCriteria);
       
-      // Now send the criteria and restaurant data to OpenAI for recommendation
-      const response = await sendMessageToGPT(userMessage.content, messages, restaurants, criteria);
+      // Now get a response from the AI assistant 
+      const response = await sendMessageToGPT(
+        userMessage.content, 
+        messages, 
+        restaurantData,
+        updatedCriteria
+      );
       
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
@@ -52,7 +81,7 @@ const Chat = () => {
       
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
-        content: `I'm sorry, I encountered an error. ${error.message}`,
+        content: `I'm sorry, I encountered an error while processing your request. Let's try again with a simpler question.`,
         role: 'assistant'
       }]);
       
