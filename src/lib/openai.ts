@@ -17,16 +17,17 @@ interface Restaurant {
   contactNumber: string;
 }
 
-// This function needs an OpenAI API key to be set by the user
+// Your API key is hardcoded here - replace 'YOUR_OPENAI_API_KEY_HERE' with your actual OpenAI API key
+const OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY_HERE';
+
 export async function sendMessageToGPT(
   message: string, 
   previousMessages: ChatMessage[], 
   restaurants: Restaurant[]
 ): Promise<string> {
-  const apiKey = localStorage.getItem('openai_api_key');
-  
-  if (!apiKey) {
-    return "Please set your OpenAI API key in the settings page first.";
+  // No longer checking localStorage since we're using the hardcoded key
+  if (!OPENAI_API_KEY || OPENAI_API_KEY === 'YOUR_OPENAI_API_KEY_HERE') {
+    return "The API key has not been properly configured. Please contact the administrator.";
   }
 
   try {
@@ -67,7 +68,7 @@ If the user asks something not related to restaurants or if you don't have enoug
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
         model: 'gpt-4o',
