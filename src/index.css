@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -43,11 +43,11 @@
   }
 
   body {
-    @apply bg-background text-resty-text font-sans antialiased;
+    @apply bg-resty-background text-resty-text font-montserrat;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-sans font-bold;
+    @apply font-montserrat font-semibold;
   }
 
   .section-padding {
@@ -59,7 +59,6 @@
   }
 }
 
-/* Button styles */
 .btn-primary {
   @apply bg-resty-primary text-white px-6 py-3 rounded-md font-medium hover:opacity-90 transition-all;
 }
@@ -72,25 +71,10 @@
   @apply bg-resty-accent text-resty-text px-6 py-3 rounded-md font-medium hover:opacity-90 transition-all;
 }
 
-/* Component styles */
 .feature-card {
   @apply bg-white p-6 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg;
 }
 
 .navbar {
   @apply sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100;
-}
-
-/* Animation keyframes */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-.animate-float {
-  animation: float 15s ease-in-out infinite;
 }
