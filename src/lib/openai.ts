@@ -17,19 +17,12 @@ interface Restaurant {
   contactNumber: string;
 }
 
-// Your API key is hardcoded here - replace 'YOUR_OPENAI_API_KEY_HERE' with your actual OpenAI API key
-const OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY_HERE';
-
+// Using Supabase edge function to securely call OpenAI API
 export async function sendMessageToGPT(
   message: string, 
   previousMessages: ChatMessage[], 
   restaurants: Restaurant[]
 ): Promise<string> {
-  // No longer checking localStorage since we're using the hardcoded key
-  if (!OPENAI_API_KEY || OPENAI_API_KEY === 'YOUR_OPENAI_API_KEY_HERE') {
-    return "The API key has not been properly configured. Please contact the administrator.";
-  }
-
   try {
     // Format previous messages for OpenAI's format
     const formattedPreviousMessages = previousMessages.map(msg => ({
@@ -60,21 +53,17 @@ If the user asks something not related to restaurants or if you don't have enoug
       { role: "user", content: message }
     ];
 
-    // Show loading indicator or toast while waiting
-    console.log('Sending request to OpenAI...');
+    console.log('Sending request to OpenAI edge function...');
 
-    // Call OpenAI API
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call our edge function instead of OpenAI directly
+    const response = await fetch('https://ajhbefztgrigzaddwvrb.supabase.co/functions/v1/openai-chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqaGJlZnp0Z3JpZ3phZGR3dnJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MDk5MzIsImV4cCI6MjA1OTA4NTkzMn0.zVmNCS-j49Z2n_J0UWJzBsIEwnWxoYKhQnLtZ9-Spt8'
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
         messages: messages,
-        temperature: 0.7,
-        max_tokens: 800
       })
     });
 
@@ -85,9 +74,9 @@ If the user asks something not related to restaurants or if you don't have enoug
     }
 
     const data = await response.json();
-    return data.choices[0].message.content;
+    return data.content;
   } catch (error) {
     console.error('Error calling OpenAI API:', error);
-    return `Sorry, I couldn't connect to the OpenAI API. Error: ${error.message}`;
+    return `Sorry, I couldn't connect to the AI service. Error: ${error.message}`;
   }
 }
