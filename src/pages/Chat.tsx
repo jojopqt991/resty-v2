@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MessageList from '@/components/chat/MessageList';
@@ -22,6 +23,7 @@ const Chat = () => {
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [sheetId, setSheetId] = useState('');
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const googleSheetId = localStorage.getItem('google_sheet_id');

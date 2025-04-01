@@ -1,17 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
-interface Restaurant {
-  id: string;
-  name: string;
-  cuisine: string;
-  priceRange: string;
-  location: string;
-  rating: string;
-  specialFeatures: string;
-  openingHours: string;
-  contactNumber: string;
-}
+import { Restaurant } from '@/types/chat';
 
 export async function getRestaurantData(): Promise<Restaurant[]> {
   // Get the spreadsheet ID from localStorage
@@ -42,7 +31,7 @@ export async function getRestaurantData(): Promise<Restaurant[]> {
     }
 
     console.log(`Received ${data.restaurants.length} restaurants from edge function`);
-    return data.restaurants;
+    return data.restaurants as Restaurant[];
   } catch (error) {
     console.error('Error fetching restaurant data:', error);
     throw error;
