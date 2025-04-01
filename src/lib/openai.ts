@@ -1,4 +1,3 @@
-
 import { Message, Restaurant, RestaurantCriteria } from '@/types/chat';
 
 // Function to extract restaurant criteria from user message
@@ -14,10 +13,10 @@ export async function extractRestaurantCriteria(
     }));
 
     // Create system prompt focused on extracting criteria
-    const systemPrompt = `You are an AI designed to extract restaurant search criteria from user messages.
+    const systemPrompt = `You are an AI designed to extract restaurant search criteria from user messages in London, UK.
     
 Analyze the conversation and extract the following criteria (if present):
-1. Area: Geographic location/neighborhood the user wants to dine in
+1. Area: Geographic location/neighborhood in London the user wants to dine in
 2. Cuisine: Type of food/cuisine mentioned
 3. Price Level: Budget preference (e.g., cheap, moderate, expensive)
 4. Time of Day: When they want to dine (breakfast, lunch, dinner, etc.)
@@ -29,11 +28,11 @@ Return ONLY a JSON object with these fields. Do not include any explanation or o
 Example output: {"area":"Soho","cuisine":"Italian","priceLevel":"moderate","timeOfDay":"dinner","dayOfWeek":"Friday","partySize":4,"needsReservation":true}
 For any criteria not mentioned in the conversation, use null for that field.
 
-IMPORTANT: Keep area and cuisine values EXTREMELY simple. 
+IMPORTANT: Focus only on London neighborhoods and areas.
 - For area, use ONLY neighborhood names like "Soho", "Islington", "Chelsea", etc. 
-- For cuisine, use ONLY broad categories like "Italian", "Chinese", "Japanese", etc.
-- Do not use phrases or qualifiers, just the plain area or cuisine name.
-- For cuisine, try to match from this list if possible: ["Italian", "Chinese", "Japanese", "Indian", "French", "Thai", "Mexican", "British", "American", "Spanish", "Korean", "Vietnamese", "Greek", "Turkish", "Lebanese", "Pub", "Cafe", "Seafood", "Steak", "Pizza", "Burger", "Vegetarian", "Vegan"]`;
+- For cuisine, use common terms people would search for, like "Italian", "Chinese", "Japanese", etc.
+- When someone mentions a cuisine type like "Italian food", "Italian places", "Italian restaurants", etc., just extract "Italian"
+- Be flexible with spelling and wording variations for cuisine types`;
 
     // Prepare messages for the API call
     const messages = [
@@ -99,8 +98,11 @@ IMPORTANT: Keep area and cuisine values EXTREMELY simple.
           criteriaObject.area = criteriaObject.area.trim();
         }
         if (criteriaObject.cuisine) {
-          criteriaObject.cuisine = criteriaObject.cuisine.trim();
-          console.log(`Extracted cuisine criteria: "${criteriaObject.cuisine}"`);
+          // Normalize cuisine by removing common modifiers to improve matching
+          let cuisine = criteriaObject.cuisine.trim();
+          cuisine = cuisine.replace(/\s+(food|restaurant|cuisine|place|places)s?$/i, '');
+          criteriaObject.cuisine = cuisine;
+          console.log(`Extracted and normalized cuisine criteria: "${criteriaObject.cuisine}"`);
         }
       }
 
@@ -133,13 +135,13 @@ export async function sendMessageToGPT(
     }));
 
     // Create system prompt with criteria but not the full restaurant database
-    const systemPrompt = `You are Resty, an AI restaurant concierge. Your job is to help users find restaurants based on their preferences.
+    const systemPrompt = `You are Resty, an AI restaurant concierge for London, UK. Your job is to help users find restaurants in London based on their preferences. Use British English in your responses.
 
-I've analyzed the conversation and extracted these criteria from the user:
+I've analysed the conversation and extracted these criteria from the user:
 ${JSON.stringify(criteria, null, 2)}
 
 During your conversation with the user, gather information about:
-1. Location (area) - Which area they want to dine in
+1. Location (area) - Which area of London they want to dine in
 2. Food type/cuisine - What cuisine they're interested in
 3. Time of day - When they want to dine
 4. Day of the week - Which day they plan to visit
@@ -147,7 +149,7 @@ During your conversation with the user, gather information about:
 6. Price level preference (optional)
 7. Whether they need reservations (optional)
 
-Be conversational and helpful. If you don't have enough information yet, ask follow-up questions to get the details you need.`;
+Be conversational, helpful and knowledgeable about London's dining scene. If you don't have enough information yet, ask follow-up questions to get the details you need.`;
 
     // Prepare messages for the API call - only keep last few messages to reduce token count
     const messages = [

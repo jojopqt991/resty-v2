@@ -99,62 +99,106 @@ serve(async (req) => {
           });
           console.log(`All cuisines in database: ${Array.from(uniqueCuisines).join(', ')}`);
 
-          // IMPROVED MATCHING: Check for more variations of the cuisine
-          // For example: "italian" should match "italian_restaurant", "italian_food", etc.
-          let matchingRestaurants = filteredRestaurants.filter(r => {
-            // Check primary_type for exact match
+          // COMPREHENSIVE MATCHING: Multiple approaches to match cuisine
+          // For example: "italian" should match "italian_restaurant", "italian food", etc.
+          // Initialize a filtered array to collect matching restaurants
+          let matchedRestaurants = [];
+          
+          // FIRST PASS: Look for exact matches
+          let exactMatches = filteredRestaurants.filter(r => {
             const primaryTypeMatch = r.primary_type && 
-                                    r.primary_type.toLowerCase() === cuisineLower;
+                                   r.primary_type.toLowerCase() === cuisineLower;
             
-            // Check types for any variant containing the cuisine word
-            const typesMatch = r.types && r.types.toLowerCase().split(',').some(t => {
-              const trimmed = t.trim();
-              return trimmed === cuisineLower || // Exact match
-                     trimmed.startsWith(cuisineLower + "_") || // Starts with cuisine_
-                     trimmed.endsWith("_" + cuisineLower) || // Ends with _cuisine
-                     trimmed.includes("_" + cuisineLower + "_"); // Contains _cuisine_ pattern
-            });
+            const typesExactMatch = r.types && 
+                                  r.types.toLowerCase().split(',')
+                                  .some(t => t.trim() === cuisineLower);
             
-            // Check if types field contains the cuisine as a substring
-            const typesContain = r.types && 
-                              r.types.toLowerCase().includes(cuisineLower);
+            const isExactMatch = primaryTypeMatch || typesExactMatch;
             
-            const isMatch = primaryTypeMatch || typesMatch || typesContain;
-            
-            if (isMatch) {
-              console.log(`Cuisine match for "${cuisineLower}": ${r.name} - Primary: ${r.primary_type}, Types: ${r.types}`);
+            if (isExactMatch) {
+              console.log(`EXACT cuisine match for "${cuisineLower}": ${r.name}`);
             }
             
-            return isMatch;
+            return isExactMatch;
           });
           
-          // Use the new matching results
-          if (matchingRestaurants.length > 0) {
-            console.log(`Found ${matchingRestaurants.length} cuisine matches for "${cuisineLower}"`);
-            filteredRestaurants = matchingRestaurants;
-          } else {
-            console.log(`No cuisine matches found for "${cuisineLower}", using more flexible matching`);
+          matchedRestaurants = [...exactMatches];
+          
+          // SECOND PASS: Look for compound terms like "italian_restaurant", "italian_food"
+          if (exactMatches.length < 3) {
+            const compoundMatches = filteredRestaurants.filter(r => {
+              // Skip restaurants already matched
+              if (exactMatches.some(m => m.id === r.id)) return false;
+              
+              const hasCompoundMatch = r.types && 
+                r.types.toLowerCase().split(',').some(t => {
+                  const trimmed = t.trim();
+                  return trimmed.includes(cuisineLower + "_") || 
+                         trimmed.startsWith(cuisineLower);
+                });
+              
+              if (hasCompoundMatch) {
+                console.log(`COMPOUND cuisine match for "${cuisineLower}": ${r.name} - Types: ${r.types}`);
+              }
+              
+              return hasCompoundMatch;
+            });
             
-            // Fallback to a more flexible matching approach
-            matchingRestaurants = filteredRestaurants.filter(r => {
+            matchedRestaurants = [...matchedRestaurants, ...compoundMatches];
+          }
+          
+          // THIRD PASS: Look for substring matches if we still don't have enough
+          if (matchedRestaurants.length < 3) {
+            const substringMatches = filteredRestaurants.filter(r => {
+              // Skip restaurants already matched
+              if (matchedRestaurants.some(m => m.id === r.id)) return false;
+              
+              // Check if types contains the cuisine as a substring
+              const typesContainCuisine = r.types && 
+                                       r.types.toLowerCase().includes(cuisineLower);
+              
+              if (typesContainCuisine) {
+                console.log(`SUBSTRING cuisine match for "${cuisineLower}": ${r.name} - Types: ${r.types}`);
+              }
+              
+              return typesContainCuisine;
+            });
+            
+            matchedRestaurants = [...matchedRestaurants, ...substringMatches];
+          }
+          
+          // FOURTH PASS: Try word-based matching if still not enough results
+          if (matchedRestaurants.length < 3) {
+            const wordMatches = filteredRestaurants.filter(r => {
+              // Skip restaurants already matched
+              if (matchedRestaurants.some(m => m.id === r.id)) return false;
+              
               const cuisineWords = cuisineLower.split(/\s+/);
+              if (cuisineWords.length < 2) return false; // Skip single-word cuisines
+              
               const allText = ((r.primary_type || '') + ' ' + (r.types || '')).toLowerCase();
               
-              const isMatch = cuisineWords.some(word => {
+              // Check if all words from the cuisine are present
+              const allWordsPresent = cuisineWords.every(word => {
                 return word.length > 2 && allText.includes(word);
               });
               
-              if (isMatch) {
-                console.log(`Flexible cuisine match for "${cuisineLower}": ${r.name} - ${allText}`);
+              if (allWordsPresent) {
+                console.log(`WORD-BASED cuisine match for "${cuisineLower}": ${r.name} - ${allText}`);
               }
               
-              return isMatch;
+              return allWordsPresent;
             });
             
-            if (matchingRestaurants.length > 0) {
-              filteredRestaurants = matchingRestaurants;
-              console.log(`Found ${matchingRestaurants.length} flexible cuisine matches`);
-            }
+            matchedRestaurants = [...matchedRestaurants, ...wordMatches];
+          }
+          
+          // Use the matching results if we found any
+          if (matchedRestaurants.length > 0) {
+            console.log(`Found ${matchedRestaurants.length} total cuisine matches for "${cuisineLower}"`);
+            filteredRestaurants = matchedRestaurants;
+          } else {
+            console.log(`No cuisine matches found for "${cuisineLower}"`);
           }
           
           console.log(`After cuisine filter: ${filteredRestaurants.length} restaurants`);
@@ -236,25 +280,25 @@ serve(async (req) => {
     
     if (systemMessageIndex !== -1) {
       // Replace the system prompt with one that doesn't include the full restaurant database
-      const systemPrompt = `You are Resty, an AI restaurant concierge. Your job is to help users find restaurants based on their preferences. 
+      const systemPrompt = `You are Resty, an AI restaurant concierge for London. Your job is to help users find restaurants based on their preferences. Use British English in your responses.
       
-I've analyzed the conversation and extracted these criteria from the user:
+I've analysed the conversation and extracted these criteria from the user:
 ${JSON.stringify(criteria, null, 2)}
 
 I've found ${processedRestaurants.length} real restaurants from our database that match the user's criteria. Here they are:
 ${JSON.stringify(processedRestaurants, null, 2)}
 
 Your task:
-1. Format a nice response that recommends the real restaurants from our database
+1. Format a nice response that recommends the real London restaurants from our database
 2. Also suggest 2 additional fictional restaurants that would be perfect for the user based on their preferences
 3. Present all recommendations in a BULLET POINT list (not numbered), with a clear separation between real and AI-generated suggestions
 4. For each restaurant, provide ONLY the name and a brief 1-sentence description
-5. Make it conversational and engaging
-6. If the user hasn't provided enough criteria, ask follow-up questions to get more specific details
+5. Make it conversational and engaging, using British English
+6. If the user hasn't provided enough criteria, ask follow-up questions to get more specific details about their London dining preferences
 
 Format your response like this:
 
-"Here are some real restaurants that match your criteria:
+"Here are some real restaurants in London that match your criteria:
 • [Restaurant Name] - [Brief description]
 • [Restaurant Name] - [Brief description]
 • [Restaurant Name] - [Brief description]
