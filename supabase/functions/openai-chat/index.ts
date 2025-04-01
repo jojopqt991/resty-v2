@@ -158,24 +158,19 @@ ${JSON.stringify(restaurants, null, 2)}
 
 Your task:
 1. Format a nice response that recommends the real London restaurants from our database
-2. Also suggest 2 additional fictional restaurants that would be perfect for the user based on their preferences
-3. Present all recommendations in a BULLET POINT list (not numbered), with a clear separation between real and AI-generated suggestions
-4. For each restaurant, provide ONLY the name and a brief 1-sentence description
-5. Make it conversational and engaging, using British English
-6. If the user hasn't provided enough criteria, ask follow-up questions to get more specific details about their London dining preferences
+2. Present all recommendations in a BULLET POINT list (not numbered)
+3. For each restaurant, provide the name and a brief 1-sentence description
+4. Make it conversational and engaging, using British English
+5. If the user hasn't provided enough criteria, ask follow-up questions to get more specific details about their London dining preferences
 
 Format your response like this:
 
-"Here are some real restaurants in London that match your criteria:
+"Here are some restaurants in London that match your criteria:
 • [Restaurant Name] - [Brief description]
 • [Restaurant Name] - [Brief description]
-• [Restaurant Name] - [Brief description]
+• [Restaurant Name] - [Brief description]"
 
-I've also created these recommendations based on your preferences:
-• [AI Restaurant Name] - [Brief description]
-• [AI Restaurant Name] - [Brief description]"
-
-Real restaurants should be presented first, followed by your AI-generated suggestions.`;
+IMPORTANT: ONLY recommend restaurants from the provided list. DO NOT make up or suggest any restaurants that aren't in the data provided above.`;
 }
 
 // Function to filter restaurants based on criteria

@@ -13,7 +13,7 @@ const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hi there! I'm Resty, your AI restaurant concierge for London. Tell me what kind of restaurant you're looking for in London and I'll help you find the perfect dining spot!",
+      content: "Hi there! I'm Resty, your restaurant concierge for London. Tell me what kind of restaurant you're looking for in London and I'll help you find the perfect dining spot!",
       role: 'assistant'
     }
   ]);
