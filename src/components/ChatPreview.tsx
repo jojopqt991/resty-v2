@@ -1,6 +1,8 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useInView } from '../hooks/use-in-view';
+import { Button } from './ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface MessageProps {
   isUser: boolean;
@@ -36,6 +38,7 @@ const ChatPreview = () => {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { threshold: 0.3 });
   const [visible, setVisible] = useState(false);
+  const navigate = useNavigate();
   
   useEffect(() => {
     if (isInView) {
@@ -50,6 +53,10 @@ const ChatPreview = () => {
     { isUser: false, text: "Based on your preferences, I recommend Bella Notte on Main Street. They have handmade pasta and an excellent wine list. They have a table for 2 available at 7:30pm tonight. Would you like me to book it for you?" },
     { isUser: true, text: "That sounds perfect! Yes, please book it for 7:30pm." }
   ];
+
+  const handleTryChatClick = () => {
+    navigate('/chat');
+  };
 
   return (
     <section className="section-padding bg-white">
@@ -87,7 +94,7 @@ const ChatPreview = () => {
             ))}
           </div>
           
-          {/* Chat input */}
+          {/* Chat input with Try it button */}
           <div className="p-4 border-t border-gray-200 flex items-center">
             <input 
               type="text" 
@@ -95,9 +102,12 @@ const ChatPreview = () => {
               className="flex-1 p-2 border border-gray-300 rounded-l-md focus:outline-none focus:border-resty-primary"
               disabled
             />
-            <button className="bg-resty-primary text-white rounded-r-md px-4 py-2 font-medium">
-              Send
-            </button>
+            <Button 
+              className="bg-resty-primary text-white rounded-r-md px-4 py-2 font-medium"
+              onClick={handleTryChatClick}
+            >
+              Try it now
+            </Button>
           </div>
         </div>
       </div>

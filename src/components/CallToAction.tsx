@@ -2,8 +2,15 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const CallToAction = () => {
+  const navigate = useNavigate();
+  
+  const handleChatClick = () => {
+    navigate('/chat');
+  };
+  
   return (
     <section className="py-20 bg-gradient-to-br from-resty-primary to-resty-secondary relative overflow-hidden">
       {/* Decorative elements */}
@@ -18,7 +25,11 @@ const CallToAction = () => {
           <p className="text-white/80 text-lg md:text-xl mb-8 max-w-xl mx-auto">
             Let Resty help you discover the perfect dining experience tailored to your preferences.
           </p>
-          <Button size="lg" className="bg-white text-resty-primary hover:bg-white/90 group">
+          <Button 
+            size="lg" 
+            className="bg-white text-resty-primary hover:bg-white/90 group"
+            onClick={handleChatClick}
+          >
             Start Chatting with Resty
             <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
           </Button>
