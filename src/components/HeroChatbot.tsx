@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Send } from 'lucide-react';
@@ -18,7 +19,7 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hi there! I'm Resty. How can I help you find the perfect dining experience today?",
+      content: "Hi there! I'm Resty. Tell me what kind of restaurant you're looking for today!",
       role: 'assistant'
     }
   ]);
@@ -51,39 +52,19 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
     setIsLoading(true);
 
     try {
-      // Check if configuration is set
-      const googleSheetId = localStorage.getItem('google_sheet_id');
-      
-      if (!googleSheetId) {
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          content: "Great! Let's continue this conversation in the full chat experience where I can help you find the perfect restaurant.",
+          role: 'assistant'
+        }]);
+        setIsLoading(false);
+        
+        // Navigate to chat after a brief delay
         setTimeout(() => {
-          setMessages(prev => [...prev, {
-            id: (Date.now() + 1).toString(),
-            content: "I need a Google Sheet ID to access restaurant data. Let me take you to the Settings page where you can provide this information.",
-            role: 'assistant'
-          }]);
-          setIsLoading(false);
-          
-          // Navigate to settings after a brief delay
-          setTimeout(() => {
-            navigate('/settings');
-          }, 3000);
-        }, 1000);
-      } else {
-        // Configuration exists, proceed to chat page
-        setTimeout(() => {
-          setMessages(prev => [...prev, {
-            id: (Date.now() + 1).toString(),
-            content: "Great! Let's continue this conversation in the full chat experience where I can access restaurant data and help you find the perfect dining spot.",
-            role: 'assistant'
-          }]);
-          setIsLoading(false);
-          
-          // Navigate to chat after a brief delay
-          setTimeout(() => {
-            navigate('/chat');
-          }, 2000);
-        }, 1000);
-      }
+          navigate('/chat');
+        }, 2000);
+      }, 1000);
     } catch (error) {
       console.error('Error processing message:', error);
       toast({
@@ -131,7 +112,7 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
       <form onSubmit={handleSendMessage} className="border-t p-2 flex gap-2">
         <input 
           type="text" 
-          placeholder="Type your message..."
+          placeholder="What cuisine are you looking for?"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           className="flex-1 p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-resty-primary"

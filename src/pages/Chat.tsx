@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Header from '@/components/Header';
@@ -16,6 +17,15 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 interface Message {
   id: string;
@@ -27,13 +37,14 @@ const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hi there! I'm Resty, your AI restaurant concierge. How can I help you find the perfect dining experience today?",
+      content: "Hi there! I'm Resty, your AI restaurant concierge. Tell me what kind of restaurant you're looking for today and I'll help you find the perfect dining spot!",
       role: 'assistant'
     }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isConfigured, setIsConfigured] = useState(false);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [sheetId, setSheetId] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -41,26 +52,26 @@ const Chat = () => {
   useEffect(() => {
     const googleSheetId = localStorage.getItem('google_sheet_id');
     
-    const configured = !!googleSheetId;
-    setIsConfigured(configured);
-    
-    if (!configured) {
-      toast({
-        title: "Configuration Required",
-        description: "Google Sheet ID not set. Redirecting to Settings.",
-        variant: "destructive",
-      });
-      
-      setTimeout(() => {
-        navigate('/settings');
-      }, 3000);
+    if (!googleSheetId) {
+      setShowConfigDialog(true);
     }
     
     scrollToBottom();
-  }, [messages, navigate, toast]);
+  }, [messages]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const saveSheetId = () => {
+    if (sheetId.trim()) {
+      localStorage.setItem('google_sheet_id', sheetId.trim());
+      setShowConfigDialog(false);
+      toast({
+        title: "Settings saved",
+        description: "Your Google Sheet ID has been saved successfully.",
+      });
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -77,8 +88,12 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
-      if (!isConfigured) {
-        throw new Error('Google Sheets API key or spreadsheet ID not set');
+      // Check if Google Sheet ID is set
+      const googleSheetId = localStorage.getItem('google_sheet_id');
+      
+      if (!googleSheetId) {
+        setShowConfigDialog(true);
+        throw new Error('Google Sheet ID not set');
       }
 
       const restaurants = await getRestaurantData();
@@ -93,10 +108,10 @@ const Chat = () => {
     } catch (error) {
       console.error('Error processing message:', error);
       
-      if (error.message === 'Google Sheets API key or spreadsheet ID not set') {
+      if (error.message === 'Google Sheet ID not set') {
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(),
-          content: "I need access to restaurant data to help you. Please visit the Settings page to configure the Google Sheets API key and spreadsheet ID.",
+          content: "I need access to restaurant data to help you. Please provide a Google Sheet ID in the settings.",
           role: 'assistant'
         }]);
       } else {
@@ -116,46 +131,6 @@ const Chat = () => {
       setIsLoading(false);
     }
   };
-
-  if (!isConfigured) {
-    return (
-      <div className="min-h-screen bg-resty-background">
-        <Header />
-        <main className="container max-w-4xl mx-auto px-4 py-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-resty-primary">Chat with Resty</h1>
-          
-          <Card className="mb-8">
-            <CardHeader className="bg-amber-50 border-b">
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-amber-600" />
-                <span>Configuration Required</span>
-              </CardTitle>
-              <CardDescription>
-                Missing restaurant data configuration
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <p className="mb-4">
-                Before you can chat with Resty, you need to configure your Google Sheet ID.
-                This will allow Resty to access restaurant data and provide recommendations.
-              </p>
-              <p>
-                Please visit the Settings page to configure this value.
-              </p>
-            </CardContent>
-            <CardFooter className="bg-gray-50 border-t">
-              <Link to="/settings">
-                <Button>
-                  Go to Settings
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-resty-background flex flex-col">
@@ -186,7 +161,7 @@ const Chat = () => {
           
           <form onSubmit={handleSendMessage} className="border-t p-4 flex gap-2">
             <Textarea
-              placeholder="Type your message..."
+              placeholder="What kind of restaurant are you looking for?"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               className="resize-none flex-1"
@@ -206,6 +181,35 @@ const Chat = () => {
         </div>
       </main>
       <Footer />
+
+      {/* Google Sheet ID Configuration Dialog */}
+      <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Restaurant Data Needed</DialogTitle>
+            <DialogDescription>
+              To provide restaurant recommendations, Resty needs access to a Google Sheet with restaurant data.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="sheet-id">Google Sheet ID</Label>
+              <Input
+                id="sheet-id"
+                placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
+                value={sheetId}
+                onChange={(e) => setSheetId(e.target.value)}
+              />
+              <p className="text-sm text-muted-foreground">
+                Find this in your Google Sheet URL: docs.google.com/spreadsheets/d/<strong>[THIS-IS-YOUR-SHEET-ID]</strong>/edit
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={saveSheetId}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
