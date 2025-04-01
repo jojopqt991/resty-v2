@@ -89,15 +89,15 @@ serve(async (req) => {
           const cuisineLower = criteria.cuisine.toLowerCase();
           console.log(`Filtering by cuisine: "${cuisineLower}"`);
           
-          // First, log some available cuisines to debug
+          // Log ALL available cuisines to debug
           const uniqueCuisines = new Set();
-          restaurants.slice(0, 50).forEach(r => {
+          restaurants.forEach(r => {
             if (r.primary_type) uniqueCuisines.add(r.primary_type.toLowerCase());
             if (r.types) {
               r.types.toLowerCase().split(',').map(t => t.trim()).forEach(t => uniqueCuisines.add(t));
             }
           });
-          console.log(`Sample cuisines in database: ${Array.from(uniqueCuisines).slice(0, 30).join(', ')}`);
+          console.log(`All cuisines in database: ${Array.from(uniqueCuisines).join(', ')}`);
           
           // More flexible matching - try exact match first, then contains
           let exactMatches = filteredRestaurants.filter(r => {
@@ -105,18 +105,23 @@ serve(async (req) => {
               (r.primary_type && r.primary_type.toLowerCase() === cuisineLower) ||
               (r.types && r.types.toLowerCase().split(',').some(t => t.trim().toLowerCase() === cuisineLower));
             
+            if (cuisineExactMatch) {
+              console.log(`Exact cuisine match: ${r.name} - Primary: ${r.primary_type}, Types: ${r.types}`);
+            }
             return cuisineExactMatch;
           });
           
           // If no exact matches, try partial matches
           if (exactMatches.length === 0) {
+            console.log("No exact cuisine matches, trying partial matches...");
+            
             filteredRestaurants = filteredRestaurants.filter(r => {
               const cuisineMatch = 
                 (r.primary_type && r.primary_type.toLowerCase().includes(cuisineLower)) ||
                 (r.types && r.types.toLowerCase().includes(cuisineLower));
               
               if (cuisineMatch) {
-                console.log(`Cuisine match: ${r.name} - ${r.primary_type || r.types}`);
+                console.log(`Cuisine partial match: ${r.name} - Primary: ${r.primary_type}, Types: ${r.types}`);
               }
               return cuisineMatch;
             });
@@ -148,16 +153,24 @@ serve(async (req) => {
           
           if (criteria.cuisine && filteredRestaurants.length > 0) {
             const cuisineWords = criteria.cuisine.toLowerCase().split(/\s+/);
+            console.log(`Trying flexible cuisine match with words: ${cuisineWords.join(', ')}`);
+            
             filteredRestaurants = filteredRestaurants.filter(r => {
               if (!r.primary_type && !r.types) return false;
               
               // Check if any word in cuisine matches
               const cuisineText = ((r.primary_type || '') + ' ' + (r.types || '')).toLowerCase();
-              return cuisineWords.some(word => word.length > 2 && cuisineText.includes(word));
+              const matched = cuisineWords.some(word => word.length > 2 && cuisineText.includes(word));
+              
+              if (matched) {
+                console.log(`Flexible cuisine match: ${r.name} - Cuisine text: ${cuisineText}`);
+              }
+              
+              return matched;
             });
+            
+            console.log(`After flexible cuisine matching: ${filteredRestaurants.length} restaurants`);
           }
-          
-          console.log(`After flexible matching: ${filteredRestaurants.length} restaurants`);
         }
         
         // If we still have too many restaurants after filtering, take a representative sample

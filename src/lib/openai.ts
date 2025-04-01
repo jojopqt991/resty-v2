@@ -32,7 +32,8 @@ For any criteria not mentioned in the conversation, use null for that field.
 IMPORTANT: Keep area and cuisine values EXTREMELY simple. 
 - For area, use ONLY neighborhood names like "Soho", "Islington", "Chelsea", etc. 
 - For cuisine, use ONLY broad categories like "Italian", "Chinese", "Japanese", etc.
-- Do not use phrases or qualifiers, just the plain area or cuisine name.`;
+- Do not use phrases or qualifiers, just the plain area or cuisine name.
+- For cuisine, try to match from this list if possible: ["Italian", "Chinese", "Japanese", "Indian", "French", "Thai", "Mexican", "British", "American", "Spanish", "Korean", "Vietnamese", "Greek", "Turkish", "Lebanese", "Pub", "Cafe", "Seafood", "Steak", "Pizza", "Burger", "Vegetarian", "Vegan"]`;
 
     // Prepare messages for the API call
     const messages = [
@@ -99,6 +100,7 @@ IMPORTANT: Keep area and cuisine values EXTREMELY simple.
         }
         if (criteriaObject.cuisine) {
           criteriaObject.cuisine = criteriaObject.cuisine.trim();
+          console.log(`Extracted cuisine criteria: "${criteriaObject.cuisine}"`);
         }
       }
 

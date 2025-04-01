@@ -29,6 +29,20 @@ const Chat = () => {
         const data = await getRestaurantData();
         setRestaurantData(data);
         console.log(`Loaded ${data.length} restaurants`);
+        
+        // Log a sample of cuisines in the data to help with debugging
+        const cuisineSet = new Set<string>();
+        data.slice(0, 50).forEach(restaurant => {
+          if (restaurant.primary_type) {
+            cuisineSet.add(restaurant.primary_type);
+          }
+          if (restaurant.types) {
+            restaurant.types.split(',').forEach(type => {
+              cuisineSet.add(type.trim());
+            });
+          }
+        });
+        console.log('Sample of cuisines in dataset:', Array.from(cuisineSet).slice(0, 20));
       } catch (error) {
         console.error('Error loading restaurant data:', error);
         toast({
