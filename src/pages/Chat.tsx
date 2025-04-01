@@ -1,37 +1,14 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Send } from "lucide-react";
+import MessageList from '@/components/chat/MessageList';
+import MessageInput from '@/components/chat/MessageInput';
+import ConfigDialog from '@/components/chat/ConfigDialog';
 import { getRestaurantData } from '@/lib/googleSheets';
 import { sendMessageToGPT } from '@/lib/openai';
-import { 
-  Card, 
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
-}
+import { Message, Restaurant } from '@/types/chat';
 
 const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -41,13 +18,10 @@ const Chat = () => {
       role: 'assistant'
     }
   ]);
-  const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [sheetId, setSheetId] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const googleSheetId = localStorage.getItem('google_sheet_id');
@@ -55,13 +29,7 @@ const Chat = () => {
     if (!googleSheetId) {
       setShowConfigDialog(true);
     }
-    
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   const saveSheetId = () => {
     if (sheetId.trim()) {
@@ -74,17 +42,13 @@ const Chat = () => {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (input.trim() === '') return;
-    
+  const handleSendMessage = async (content: string) => {
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: input.trim(),
+      content,
       role: 'user'
     };
     setMessages(prev => [...prev, userMessage]);
-    setInput('');
     setIsLoading(true);
 
     try {
@@ -139,77 +103,19 @@ const Chat = () => {
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-resty-primary">Chat with Resty</h1>
         
         <div className="bg-white rounded-lg shadow-md h-[600px] flex flex-col">
-          <div className="flex-1 p-4 overflow-y-auto">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`mb-4 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`rounded-2xl px-4 py-3 max-w-xs md:max-w-md ${
-                    message.role === 'user' 
-                      ? 'bg-resty-primary text-white rounded-tr-none' 
-                      : 'bg-gray-100 text-gray-800 rounded-tl-none'
-                  }`}
-                >
-                  {message.content}
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-          
-          <form onSubmit={handleSendMessage} className="border-t p-4 flex gap-2">
-            <Textarea
-              placeholder="Tell me what kind of restaurant you're looking for..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="resize-none flex-1"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  if (!isLoading && input.trim()) {
-                    handleSendMessage(e);
-                  }
-                }
-              }}
-            />
-            <Button type="submit" disabled={isLoading || input.trim() === ''}>
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
-          </form>
+          <MessageList messages={messages} />
+          <MessageInput onSend={handleSendMessage} isLoading={isLoading} />
         </div>
       </main>
       <Footer />
 
-      {/* Google Sheet ID Configuration Dialog */}
-      <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Restaurant Data Needed</DialogTitle>
-            <DialogDescription>
-              To provide restaurant recommendations, Resty needs access to a Google Sheet with restaurant data.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="sheet-id">Google Sheet ID</Label>
-              <Input
-                id="sheet-id"
-                placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-                value={sheetId}
-                onChange={(e) => setSheetId(e.target.value)}
-              />
-              <p className="text-sm text-muted-foreground">
-                Find this in your Google Sheet URL: docs.google.com/spreadsheets/d/<strong>[THIS-IS-YOUR-SHEET-ID]</strong>/edit
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={saveSheetId}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfigDialog 
+        open={showConfigDialog} 
+        setOpen={setShowConfigDialog}
+        sheetId={sheetId}
+        setSheetId={setSheetId}
+        onSave={saveSheetId}
+      />
     </div>
   );
 };
