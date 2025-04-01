@@ -1,3 +1,4 @@
+
 import { Message, Restaurant, RestaurantCriteria } from '@/types/chat';
 
 // Function to extract restaurant criteria from user message
@@ -53,6 +54,7 @@ IMPORTANT: Focus only on London neighborhoods and areas.
       },
       body: JSON.stringify({
         messages: messages,
+        action: "extractCriteria" // Add action parameter to distinguish request type
       })
     });
 
@@ -95,11 +97,11 @@ IMPORTANT: Focus only on London neighborhoods and areas.
       // Normalize criteria values to improve matching
       if (criteriaObject) {
         if (criteriaObject.area) {
-          criteriaObject.area = criteriaObject.area.trim();
+          criteriaObject.area = criteriaObject.area.trim().toLowerCase();
         }
         if (criteriaObject.cuisine) {
           // Normalize cuisine by removing common modifiers to improve matching
-          let cuisine = criteriaObject.cuisine.trim();
+          let cuisine = criteriaObject.cuisine.trim().toLowerCase();
           cuisine = cuisine.replace(/\s+(food|restaurant|cuisine|place|places)s?$/i, '');
           criteriaObject.cuisine = cuisine;
           console.log(`Extracted and normalized cuisine criteria: "${criteriaObject.cuisine}"`);
@@ -110,7 +112,7 @@ IMPORTANT: Focus only on London neighborhoods and areas.
       return criteriaObject as RestaurantCriteria;
     } catch (e) {
       console.error("Failed to parse criteria JSON:", data.content);
-      // Return empty object if parsing fails
+      // Return empty criteria on error
       return {};
     }
   } catch (error) {
@@ -170,7 +172,8 @@ Be conversational, helpful and knowledgeable about London's dining scene. If you
       body: JSON.stringify({
         messages: messages,
         restaurants: restaurants,
-        criteria: criteria
+        criteria: criteria,
+        action: "chatCompletion" // Add action parameter to distinguish request type
       })
     });
 
