@@ -18,7 +18,7 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hi there! I'm Resty. How can I help you find the perfect dining experience today?",
+      content: "Hi there! I'm Resty, your restaurant concierge. How can I help you find the perfect dining experience today?",
       role: 'assistant'
     }
   ]);
@@ -71,28 +71,35 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
   };
 
   return (
-    <div className={`bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200 ${className}`}>
+    <div className={`bg-white rounded-3xl shadow-lg overflow-hidden border border-gray-100 ${className}`}>
       {/* Chat header */}
-      <div className="bg-resty-primary text-white p-3 flex items-center">
-        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center mr-2">R</div>
+      <div className="bg-resty-primary text-white p-4 flex items-center">
+        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3 text-resty-primary font-bold">
+          R
+        </div>
         <div>
-          <h3 className="font-medium text-sm">Resty</h3>
-          <p className="text-xs opacity-80">Restaurant Concierge</p>
+          <h3 className="font-semibold">Resty</h3>
+          <p className="text-xs opacity-90">Your restaurant concierge</p>
+        </div>
+        <div className="ml-auto flex gap-2">
+          <div className="w-2 h-2 rounded-full bg-green-300"></div>
+          <div className="w-2 h-2 rounded-full bg-white/50"></div>
+          <div className="w-2 h-2 rounded-full bg-white/50"></div>
         </div>
       </div>
       
       {/* Chat messages */}
-      <div className="p-3 bg-gray-50 h-56 overflow-y-auto">
+      <div className="p-4 bg-gray-50 h-[60vh] max-h-[400px] overflow-y-auto">
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`mb-3 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`mb-4 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`rounded-2xl px-3 py-2 max-w-[80%] text-sm ${
+              className={`rounded-2xl px-4 py-2.5 max-w-[80%] shadow-sm ${
                 message.role === 'user' 
                   ? 'bg-resty-primary text-white rounded-tr-none' 
-                  : 'bg-gray-100 text-gray-800 rounded-tl-none'
+                  : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
               }`}
             >
               {message.content}
@@ -103,20 +110,20 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
       </div>
       
       {/* Chat input */}
-      <form onSubmit={handleSendMessage} className="border-t p-2 flex gap-2">
+      <form onSubmit={handleSendMessage} className="border-t p-3 flex gap-2 bg-white">
         <input 
           type="text" 
           placeholder="Type your message..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="flex-1 p-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-resty-primary"
+          className="flex-1 p-3 text-sm rounded-full border border-gray-200 focus:outline-none focus:border-resty-primary focus:ring-1 focus:ring-resty-primary"
           disabled={isLoading}
         />
         <Button 
           type="submit" 
-          size="sm"
+          size="icon"
           disabled={isLoading || input.trim() === ''}
-          className="px-3"
+          className="rounded-full h-10 w-10 bg-resty-primary hover:bg-resty-primary/90"
         >
           <Send className="h-4 w-4" />
         </Button>
