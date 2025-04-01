@@ -7,8 +7,8 @@ import Footer from '@/components/Footer';
 import MessageList from '@/components/chat/MessageList';
 import MessageInput from '@/components/chat/MessageInput';
 import { getRestaurantData } from '@/lib/googleSheets';
-import { sendMessageToGPT } from '@/lib/openai';
-import { Message, Restaurant } from '@/types/chat';
+import { sendMessageToGPT, extractRestaurantCriteria } from '@/lib/openai';
+import { Message, Restaurant, RestaurantCriteria } from '@/types/chat';
 
 const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -32,9 +32,15 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
+      // First, use OpenAI to understand user requirements and extract criteria
+      const criteria = await extractRestaurantCriteria(userMessage.content, messages);
+      console.log("Extracted criteria:", criteria);
+      
+      // Then fetch restaurant data and filter it on the server
       const restaurants = await getRestaurantData();
       
-      const response = await sendMessageToGPT(userMessage.content, messages, restaurants);
+      // Now send the criteria and restaurant data to OpenAI for recommendation
+      const response = await sendMessageToGPT(userMessage.content, messages, restaurants, criteria);
       
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),

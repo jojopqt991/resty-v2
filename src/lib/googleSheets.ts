@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Restaurant } from '@/types/chat';
+import { Restaurant, RestaurantCriteria } from '@/types/chat';
 
 // Default Google Sheet ID
 const DEFAULT_SHEET_ID = '1cIyJyPBm5i7ux7RLYIDBkXpJVjzDDiR0BrANuDKaJn0';

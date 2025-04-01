@@ -5,6 +5,16 @@ export interface Message {
   role: 'user' | 'assistant';
 }
 
+export interface RestaurantCriteria {
+  area?: string;
+  cuisine?: string;
+  priceLevel?: string;
+  timeOfDay?: string;
+  dayOfWeek?: string;
+  partySize?: number;
+  needsReservation?: boolean;
+}
+
 export interface Restaurant {
   id: string;
   name: string;

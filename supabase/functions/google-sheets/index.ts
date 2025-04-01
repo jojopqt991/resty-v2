@@ -30,9 +30,9 @@ serve(async (req) => {
 
     console.log('Fetching Google Sheets data, spreadsheet ID:', spreadsheetId);
     
-    // Fetch data from Google Sheets - fetch all columns (A:Z)
+    // Fix the range format - using 'A1:Z1000' instead of 'A:Z'
     const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A:Z?key=${GOOGLE_SHEETS_API_KEY}`
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A1:Z1000?key=${GOOGLE_SHEETS_API_KEY}`
     );
 
     if (!response.ok) {
@@ -51,11 +51,11 @@ serve(async (req) => {
     const headers = data.values[0];
     
     // Convert to array of restaurant objects
-    const restaurants = data.values.slice(1).map((row: string[], index: number) => {
-      const restaurant: Record<string, string> = {};
+    const restaurants = data.values.slice(1).map((row, index) => {
+      const restaurant = {};
       
       // Map each column to its header
-      headers.forEach((header: string, colIndex: number) => {
+      headers.forEach((header, colIndex) => {
         restaurant[header.toLowerCase()] = row[colIndex] || '';
       });
       
