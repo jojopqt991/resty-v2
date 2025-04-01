@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Header from '@/components/Header';
@@ -8,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Send, AlertCircle } from "lucide-react";
 import { getRestaurantData } from '@/lib/googleSheets';
 import { sendMessageToGPT } from '@/lib/openai';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Card, 
   CardContent,
@@ -37,16 +36,28 @@ const Chat = () => {
   const [isConfigured, setIsConfigured] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if Google Sheets API and spreadsheet ID are configured
-    const googleSheetsApiKey = localStorage.getItem('google_sheets_api_key');
     const googleSheetId = localStorage.getItem('google_sheet_id');
     
-    setIsConfigured(!!googleSheetsApiKey && !!googleSheetId);
+    const configured = !!googleSheetId;
+    setIsConfigured(configured);
+    
+    if (!configured) {
+      toast({
+        title: "Configuration Required",
+        description: "Google Sheet ID not set. Redirecting to Settings.",
+        variant: "destructive",
+      });
+      
+      setTimeout(() => {
+        navigate('/settings');
+      }, 3000);
+    }
     
     scrollToBottom();
-  }, [messages]);
+  }, [messages, navigate, toast]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -56,7 +67,6 @@ const Chat = () => {
     e.preventDefault();
     if (input.trim() === '') return;
     
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       content: input.trim(),
@@ -71,13 +81,10 @@ const Chat = () => {
         throw new Error('Google Sheets API key or spreadsheet ID not set');
       }
 
-      // Get restaurant data from Google Sheets
       const restaurants = await getRestaurantData();
       
-      // Send message to GPT with the context of restaurant data
       const response = await sendMessageToGPT(userMessage.content, messages, restaurants);
       
-      // Add assistant response
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         content: response,
@@ -86,7 +93,6 @@ const Chat = () => {
     } catch (error) {
       console.error('Error processing message:', error);
       
-      // Handle missing configuration error specially
       if (error.message === 'Google Sheets API key or spreadsheet ID not set') {
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(),
@@ -94,7 +100,6 @@ const Chat = () => {
           role: 'assistant'
         }]);
       } else {
-        // Generic error
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(),
           content: `I'm sorry, I encountered an error. ${error.message}`,
@@ -131,11 +136,11 @@ const Chat = () => {
             </CardHeader>
             <CardContent className="pt-6">
               <p className="mb-4">
-                Before you can chat with Resty, you need to configure your Google Sheets API key and spreadsheet ID.
+                Before you can chat with Resty, you need to configure your Google Sheet ID.
                 This will allow Resty to access restaurant data and provide recommendations.
               </p>
               <p>
-                Please visit the Settings page to configure these values.
+                Please visit the Settings page to configure this value.
               </p>
             </CardContent>
             <CardFooter className="bg-gray-50 border-t">
@@ -158,9 +163,7 @@ const Chat = () => {
       <main className="flex-1 container max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-resty-primary">Chat with Resty</h1>
         
-        {/* Chat container */}
         <div className="bg-white rounded-lg shadow-md h-[600px] flex flex-col">
-          {/* Messages area */}
           <div className="flex-1 p-4 overflow-y-auto">
             {messages.map((message) => (
               <div
@@ -181,7 +184,6 @@ const Chat = () => {
             <div ref={messagesEndRef} />
           </div>
           
-          {/* Input area */}
           <form onSubmit={handleSendMessage} className="border-t p-4 flex gap-2">
             <Textarea
               placeholder="Type your message..."

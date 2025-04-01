@@ -1,4 +1,6 @@
 
+import { supabase } from '@/integrations/supabase/client';
+
 interface Restaurant {
   id: string;
   name: string;
@@ -12,49 +14,35 @@ interface Restaurant {
 }
 
 export async function getRestaurantData(): Promise<Restaurant[]> {
-  const apiKey = localStorage.getItem('google_sheets_api_key');
+  // Get the spreadsheet ID from localStorage
+  // We still need this client-side since it can be set by the user
   const spreadsheetId = localStorage.getItem('google_sheet_id');
   
-  if (!apiKey || !spreadsheetId) {
-    throw new Error('Google Sheets API key or spreadsheet ID not set');
+  if (!spreadsheetId) {
+    console.error('Missing configuration: Google Sheet ID not set');
+    throw new Error('Google Sheet ID not set');
   }
 
   try {
-    // Get sheet data from Google Sheets API
-    const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A:I?key=${apiKey}`
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch data from Google Sheets');
-    }
-
-    const data = await response.json();
+    console.log('Calling Google Sheets edge function...');
     
-    if (!data.values || data.values.length <= 1) {
-      throw new Error('No data found in the spreadsheet');
-    }
-
-    // First row should be headers
-    const headers = data.values[0];
-    
-    // Convert to array of restaurant objects
-    const restaurants = data.values.slice(1).map((row: string[], index: number) => {
-      const restaurant: Restaurant = {
-        id: (index + 1).toString(),
-        name: row[0] || '',
-        cuisine: row[1] || '',
-        priceRange: row[2] || '',
-        location: row[3] || '',
-        rating: row[4] || '',
-        specialFeatures: row[5] || '',
-        openingHours: row[6] || '',
-        contactNumber: row[7] || ''
-      };
-      return restaurant;
+    // Call our edge function to securely fetch the Google Sheets data
+    const { data, error } = await supabase.functions.invoke('google-sheets', {
+      body: { spreadsheetId }
     });
 
-    return restaurants;
+    if (error) {
+      console.error('Edge function error:', error);
+      throw new Error(`Failed to fetch restaurant data: ${error.message}`);
+    }
+
+    if (!data || !data.restaurants) {
+      console.error('Invalid response from edge function:', data);
+      throw new Error('Invalid response from server');
+    }
+
+    console.log(`Received ${data.restaurants.length} restaurants from edge function`);
+    return data.restaurants;
   } catch (error) {
     console.error('Error fetching restaurant data:', error);
     throw error;

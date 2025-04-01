@@ -1,7 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
-import { Send, AlertCircle } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -53,14 +52,13 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
 
     try {
       // Check if configuration is set
-      const googleSheetsApiKey = localStorage.getItem('google_sheets_api_key');
       const googleSheetId = localStorage.getItem('google_sheet_id');
       
-      if (!googleSheetsApiKey || !googleSheetId) {
+      if (!googleSheetId) {
         setTimeout(() => {
           setMessages(prev => [...prev, {
             id: (Date.now() + 1).toString(),
-            content: "Before we chat, you'll need to set up your Google Sheets configuration in the Settings page. Let me take you there.",
+            content: "I need a Google Sheet ID to access restaurant data. Let me take you to the Settings page where you can provide this information.",
             role: 'assistant'
           }]);
           setIsLoading(false);
@@ -75,7 +73,7 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
         setTimeout(() => {
           setMessages(prev => [...prev, {
             id: (Date.now() + 1).toString(),
-            content: "I'd love to help you with that! Let's continue this conversation in the full chat experience.",
+            content: "Great! Let's continue this conversation in the full chat experience where I can access restaurant data and help you find the perfect dining spot.",
             role: 'assistant'
           }]);
           setIsLoading(false);
