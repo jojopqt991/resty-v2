@@ -24,6 +24,39 @@ const MessageList = ({ messages }: MessageListProps) => {
 
   // Function to format restaurant recommendations with better styling
   const formatMessage = (content: string) => {
+    // Check if the message contains bullet points
+    if (content.includes('•')) {
+      // Split the message by newlines
+      const lines = content.split('\n');
+      
+      const formattedLines = lines.map((line, index) => {
+        // Check if this line is a restaurant bullet point
+        const bulletPoint = line.match(/^(•\s+)([A-Za-z\s\-']+)(\s+-\s+)(.*)/);
+        
+        if (bulletPoint) {
+          // Extract the restaurant name and description
+          const [, bullet, name, separator, description] = bulletPoint;
+          return (
+            <div key={index} className="flex items-start my-2">
+              <span className="mr-2">{bullet}</span>
+              <div>
+                <span className="font-bold text-resty-primary">{name}</span>
+                {separator}
+                <span>{description}</span>
+              </div>
+            </div>
+          );
+        } else if (line.trim().endsWith(':')) {
+          // This is a section header
+          return <div key={index} className="font-semibold mt-3 mb-2">{line}</div>;
+        }
+        
+        return <div key={index} className="my-1">{line}</div>;
+      });
+      
+      return <>{formattedLines}</>;
+    }
+    
     // Check if the message contains numbered restaurant recommendations
     if (content.match(/\d+\.\s+[A-Za-z\s]+:/)) {
       // Split the message by newlines
@@ -63,7 +96,7 @@ const MessageList = ({ messages }: MessageListProps) => {
           className={`mb-4 flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           <div
-            className={`rounded-2xl px-4 py-3 max-w-xs md:max-w-md ${
+            className={`rounded-2xl px-4 py-3 max-w-xs md:max-w-md lg:max-w-lg ${
               message.role === 'user' 
                 ? 'bg-resty-primary text-white rounded-tr-none' 
                 : 'bg-gray-100 text-gray-800 rounded-tl-none'

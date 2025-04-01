@@ -28,36 +28,45 @@ serve(async (req) => {
     }
 
     console.log('Calling OpenAI API with gpt-4o-mini...');
+    console.log('Filtering criteria:', criteria);
     
     // Extract only a subset of restaurant data to reduce token count
     let processedRestaurants = restaurants;
     
     // If we have restaurant data and need to reduce tokens
-    if (restaurants && Array.isArray(restaurants) && restaurants.length > 3) {
+    if (restaurants && Array.isArray(restaurants) && restaurants.length > 0) {
       // Filter restaurants based on criteria if available
       let filteredRestaurants = restaurants;
       
       if (criteria) {
         // Filter by area if specified
-        if (criteria.area) {
+        if (criteria.area && criteria.area !== null) {
+          const areaLower = criteria.area.toLowerCase();
+          console.log(`Filtering by area: ${areaLower}`);
           filteredRestaurants = filteredRestaurants.filter(r => 
-            r.area && r.area.toLowerCase().includes(criteria.area.toLowerCase())
+            (r.area && r.area.toLowerCase().includes(areaLower)) ||
+            (r.neighborhood && r.neighborhood.toLowerCase().includes(areaLower))
           );
+          console.log(`After area filter: ${filteredRestaurants.length} restaurants`);
         }
         
         // Filter by cuisine if specified
-        if (criteria.cuisine) {
+        if (criteria.cuisine && criteria.cuisine !== null) {
+          const cuisineLower = criteria.cuisine.toLowerCase();
+          console.log(`Filtering by cuisine: ${cuisineLower}`);
           filteredRestaurants = filteredRestaurants.filter(r => 
-            (r.primary_type && r.primary_type.toLowerCase().includes(criteria.cuisine.toLowerCase())) ||
-            (r.types && r.types.toLowerCase().includes(criteria.cuisine.toLowerCase()))
+            (r.primary_type && r.primary_type.toLowerCase().includes(cuisineLower)) ||
+            (r.types && r.types.toLowerCase().includes(cuisineLower))
           );
+          console.log(`After cuisine filter: ${filteredRestaurants.length} restaurants`);
         }
 
-        // If we still have too many restaurants after filtering, take the first 3 for the real recommendations
+        // If we still have too many restaurants after filtering, take the first 3 for real recommendations
         if (filteredRestaurants.length > 3) {
           filteredRestaurants = filteredRestaurants.slice(0, 3);
         } else if (filteredRestaurants.length === 0) {
           // If no matches after filtering, fall back to unfiltered but limited list
+          console.log('No restaurants matched the criteria, falling back to random selection');
           filteredRestaurants = restaurants.slice(0, 3);
         }
       } else {
@@ -96,10 +105,21 @@ ${JSON.stringify(processedRestaurants, null, 2)}
 Your task:
 1. Format a nice response that recommends the real restaurants from our database
 2. Also suggest 2 additional fictional restaurants that would be perfect for the user based on their preferences
-3. Present all 5 recommendations in a nicely formatted numbered list (3 real + 2 AI-generated)
-4. For each restaurant, provide only the name and a brief 1-sentence description
+3. Present all recommendations in a BULLET POINT list (not numbered), with a clear separation between real and AI-generated suggestions
+4. For each restaurant, provide ONLY the name and a brief 1-sentence description
 5. Make it conversational and engaging
 6. If the user hasn't provided enough criteria, ask follow-up questions to get more specific details
+
+Format your response like this:
+
+"Here are some real restaurants that match your criteria:
+• [Restaurant Name] - [Brief description]
+• [Restaurant Name] - [Brief description]
+• [Restaurant Name] - [Brief description]
+
+I've also created these recommendations based on your preferences:
+• [AI Restaurant Name] - [Brief description]
+• [AI Restaurant Name] - [Brief description]"
 
 Real restaurants should be presented first, followed by your AI-generated suggestions.`;
 
