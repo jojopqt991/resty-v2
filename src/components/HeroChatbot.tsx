@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   id: string;
@@ -26,6 +27,7 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     scrollToBottom();
@@ -54,10 +56,16 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
       setTimeout(() => {
         setMessages(prev => [...prev, {
           id: (Date.now() + 1).toString(),
-          content: "Thanks for your message! This is a demo version. Chat with the full version to get personalized restaurant recommendations!",
+          content: "I'd love to help you with that! Let's continue this conversation in the full chat experience.",
           role: 'assistant'
         }]);
         setIsLoading(false);
+        
+        // Navigate to chat after a brief delay
+        setTimeout(() => {
+          navigate('/chat');
+        }, 2000);
+        
       }, 1000);
     } catch (error) {
       console.error('Error processing message:', error);

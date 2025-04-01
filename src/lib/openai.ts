@@ -48,6 +48,7 @@ When recommending restaurants:
 3. Provide specific details like opening hours and contact information
 4. Offer to make a booking on their behalf
 5. Be conversational and helpful
+6. If a restaurant matches the user's request well, always provide its name, cuisine type, and location
 
 If the user asks something not related to restaurants or if you don't have enough information, politely guide them back to restaurant-related queries or ask for more details.`;
 
@@ -57,6 +58,9 @@ If the user asks something not related to restaurants or if you don't have enoug
       ...formattedPreviousMessages.slice(-10), // Only keep last 10 messages for context
       { role: "user", content: message }
     ];
+
+    // Show loading indicator or toast while waiting
+    console.log('Sending request to OpenAI...');
 
     // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -69,20 +73,20 @@ If the user asks something not related to restaurants or if you don't have enoug
         model: 'gpt-4o',
         messages: messages,
         temperature: 0.7,
-        max_tokens: 500
+        max_tokens: 800
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error('OpenAI API error:', errorData);
-      throw new Error('Failed to get response from OpenAI');
+      throw new Error(`Failed to get response from OpenAI: ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
     return data.choices[0].message.content;
   } catch (error) {
     console.error('Error calling OpenAI API:', error);
-    throw new Error('Failed to connect to OpenAI API');
+    return `Sorry, I couldn't connect to the OpenAI API. Error: ${error.message}`;
   }
 }
