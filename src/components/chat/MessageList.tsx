@@ -31,19 +31,31 @@ const MessageList = ({ messages }: MessageListProps) => {
       
       const formattedLines = lines.map((line, index) => {
         // Check if this line is a restaurant bullet point
-        const bulletPoint = line.match(/^(•\s+)([A-Za-z\s\-']+)(\s+-\s+)(.*)/);
-        
-        if (bulletPoint) {
+        if (line.trim().startsWith('•')) {
           // Extract the restaurant name and description
-          const [, bullet, name, separator, description] = bulletPoint;
+          // Match pattern like "• Restaurant Name - Description"
+          const bulletPoint = line.match(/^(\s*•\s+)([^-]+)(-\s*)(.*)/);
+          
+          if (bulletPoint) {
+            // Extract the restaurant name and description
+            const [, bullet, name, separator, description] = bulletPoint;
+            return (
+              <div key={index} className="flex items-start my-2">
+                <span className="mr-2">{bullet}</span>
+                <div>
+                  <span className="font-bold text-resty-primary">{name}</span>
+                  {separator}
+                  <span>{description}</span>
+                </div>
+              </div>
+            );
+          }
+          
+          // If the line has a bullet but doesn't match the pattern above
           return (
             <div key={index} className="flex items-start my-2">
-              <span className="mr-2">{bullet}</span>
-              <div>
-                <span className="font-bold text-resty-primary">{name}</span>
-                {separator}
-                <span>{description}</span>
-              </div>
+              <span className="mr-2">•</span>
+              <div>{line.substring(1).trim()}</div>
             </div>
           );
         } else if (line.trim().endsWith(':')) {

@@ -43,10 +43,14 @@ serve(async (req) => {
         if (criteria.area && criteria.area !== null) {
           const areaLower = criteria.area.toLowerCase();
           console.log(`Filtering by area: ${areaLower}`);
-          filteredRestaurants = filteredRestaurants.filter(r => 
-            (r.area && r.area.toLowerCase().includes(areaLower)) ||
-            (r.neighborhood && r.neighborhood.toLowerCase().includes(areaLower))
-          );
+          filteredRestaurants = filteredRestaurants.filter(r => {
+            const areaMatch = (r.area && r.area.toLowerCase().includes(areaLower)) ||
+                            (r.neighborhood && r.neighborhood.toLowerCase().includes(areaLower));
+            if (areaMatch) {
+              console.log(`Area match: ${r.name} - ${r.area || r.neighborhood}`);
+            }
+            return areaMatch;
+          });
           console.log(`After area filter: ${filteredRestaurants.length} restaurants`);
         }
         
@@ -54,10 +58,14 @@ serve(async (req) => {
         if (criteria.cuisine && criteria.cuisine !== null) {
           const cuisineLower = criteria.cuisine.toLowerCase();
           console.log(`Filtering by cuisine: ${cuisineLower}`);
-          filteredRestaurants = filteredRestaurants.filter(r => 
-            (r.primary_type && r.primary_type.toLowerCase().includes(cuisineLower)) ||
-            (r.types && r.types.toLowerCase().includes(cuisineLower))
-          );
+          filteredRestaurants = filteredRestaurants.filter(r => {
+            const cuisineMatch = (r.primary_type && r.primary_type.toLowerCase().includes(cuisineLower)) ||
+                                (r.types && r.types.toLowerCase().includes(cuisineLower));
+            if (cuisineMatch) {
+              console.log(`Cuisine match: ${r.name} - ${r.primary_type || r.types}`);
+            }
+            return cuisineMatch;
+          });
           console.log(`After cuisine filter: ${filteredRestaurants.length} restaurants`);
         }
 
@@ -82,7 +90,9 @@ serve(async (req) => {
         neighborhood: restaurant.neighborhood,
         primary_type: restaurant.primary_type,
         types: restaurant.types,
-        price_level: restaurant.price_level
+        price_level: restaurant.price_level,
+        rating: restaurant.rating,
+        description: restaurant.description
       }));
       
       console.log(`Using ${processedRestaurants.length} filtered restaurants for recommendations`);

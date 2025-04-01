@@ -1,3 +1,4 @@
+
 import { Message, Restaurant, RestaurantCriteria } from '@/types/chat';
 
 // Function to extract restaurant criteria from user message
@@ -58,6 +59,12 @@ For any criteria not mentioned in the conversation, use null for that field.`;
     const data = await response.json();
     
     try {
+      // Check if we have data.content before trying to process it
+      if (!data || !data.content) {
+        console.error('Invalid response from OpenAI:', data);
+        return {};
+      }
+
       // Parse the response as JSON
       let criteriaObject;
       try {
