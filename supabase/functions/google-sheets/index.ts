@@ -30,9 +30,9 @@ serve(async (req) => {
 
     console.log('Fetching Google Sheets data, spreadsheet ID:', spreadsheetId);
     
-    // Fetch data from Google Sheets
+    // Fetch data from Google Sheets - fetch all columns (A:Z)
     const response = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A:I?key=${GOOGLE_SHEETS_API_KEY}`
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A:Z?key=${GOOGLE_SHEETS_API_KEY}`
     );
 
     if (!response.ok) {
@@ -52,17 +52,19 @@ serve(async (req) => {
     
     // Convert to array of restaurant objects
     const restaurants = data.values.slice(1).map((row: string[], index: number) => {
-      return {
-        id: (index + 1).toString(),
-        name: row[0] || '',
-        cuisine: row[1] || '',
-        priceRange: row[2] || '',
-        location: row[3] || '',
-        rating: row[4] || '',
-        specialFeatures: row[5] || '',
-        openingHours: row[6] || '',
-        contactNumber: row[7] || ''
-      };
+      const restaurant: Record<string, string> = {};
+      
+      // Map each column to its header
+      headers.forEach((header: string, colIndex: number) => {
+        restaurant[header.toLowerCase()] = row[colIndex] || '';
+      });
+      
+      // Add id if it's not in the spreadsheet
+      if (!restaurant.id) {
+        restaurant.id = (index + 1).toString();
+      }
+
+      return restaurant;
     });
 
     console.log(`Successfully processed ${restaurants.length} restaurants`);

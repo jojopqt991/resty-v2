@@ -28,7 +28,7 @@ const Settings = () => {
       
       toast({
         title: "Settings saved",
-        description: "Your Google Sheet ID has been saved successfully.",
+        description: "Your restaurant data source has been configured successfully.",
       });
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -50,9 +50,9 @@ const Settings = () => {
         
         <Card>
           <CardHeader>
-            <CardTitle>Google Sheet Settings</CardTitle>
+            <CardTitle>Restaurant Data Source</CardTitle>
             <CardDescription>
-              Configure your Google Sheet to access restaurant data.
+              Configure your Google Sheet containing restaurant information.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -70,6 +70,9 @@ const Settings = () => {
                 </p>
                 <p className="text-sm text-gray-500 mt-2">
                   Make sure your Google Sheet is set to "Anyone with the link can view".
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Your Google Sheet must have column headers matching the restaurant data format.
                 </p>
               </div>
             </div>

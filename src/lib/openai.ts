@@ -8,13 +8,31 @@ interface ChatMessage {
 interface Restaurant {
   id: string;
   name: string;
-  cuisine: string;
-  priceRange: string;
-  location: string;
+  street_address: string;
+  city: string;
+  country: string;
+  neighborhood: string;
+  postcode: string;
+  area: string;
+  region: string;
+  parliamentary_constituency: string;
+  primary_type: string;
+  types: string;
+  phone: string;
+  website: string;
+  hours: string;
   rating: string;
-  specialFeatures: string;
-  openingHours: string;
-  contactNumber: string;
+  total_ratings: string;
+  price_level: string;
+  description: string;
+  plus_code: string;
+  dine_in: string;
+  delivery: string;
+  takeout: string;
+  reservable: string;
+  business_status: string;
+  google_maps_url: string;
+  input_url: string;
 }
 
 // Using Supabase edge function to securely call OpenAI API
@@ -36,15 +54,39 @@ export async function sendMessageToGPT(
 Here is the database of restaurants you have access to:
 ${JSON.stringify(restaurants, null, 2)}
 
-When recommending restaurants:
-1. Match user preferences to the available options
-2. Consider cuisine, price range, location, and special features
-3. Provide specific details like opening hours and contact information
-4. Offer to make a booking on their behalf
-5. Be conversational and helpful
-6. If a restaurant matches the user's request well, always provide its name, cuisine type, and location
+During your conversation with the user, ALWAYS gather the following information:
+1. Location (area) - Which area they want to dine in
+2. Food type (primary_type and types) - What cuisine they're interested in
+3. Time of day - When they want to dine
+4. Day of the week - Which day they plan to visit
+5. Number of people in their party
 
-If the user asks something not related to restaurants or if you don't have enough information, politely guide them back to restaurant-related queries or ask for more details.`;
+Optional information that is helpful if you can gather:
+- Price level preference
+- Whether they need a place that takes reservations
+
+PROCESS:
+1. Engage in conversation to gather all required information
+2. Once you have sufficient information, search the restaurant database for matches
+3. Filter restaurants by:
+   - Matching the area or nearby neighborhoods
+   - Matching the food type/cuisine
+   - Ensuring it's open on the requested day/time (check 'hours')
+   - Can accommodate the party size
+   - Matches price level and reservation requirements if specified
+4. Present 1-3 recommendations that best match their criteria
+
+When recommending restaurants:
+1. Always include the restaurant name, cuisine type, and neighborhood
+2. Mention relevant information like hours, rating, and whether reservation is needed
+3. Include a brief description of what makes this restaurant a good match
+4. Provide contact information for making reservations
+5. Be conversational and helpful
+
+If you don't have enough information yet, ask follow-up questions to get the details you need.
+If no restaurants match the exact criteria, suggest alternatives and explain why.
+
+Remember to be conversational and friendly throughout the interaction.`;
 
     // Prepare messages for the API call
     const messages = [

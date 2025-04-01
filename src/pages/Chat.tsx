@@ -5,10 +5,9 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Send, AlertCircle } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { getRestaurantData } from '@/lib/googleSheets';
 import { sendMessageToGPT } from '@/lib/openai';
-import { Link, useNavigate } from 'react-router-dom';
 import { 
   Card, 
   CardContent,
@@ -26,6 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface Message {
   id: string;
@@ -161,7 +161,7 @@ const Chat = () => {
           
           <form onSubmit={handleSendMessage} className="border-t p-4 flex gap-2">
             <Textarea
-              placeholder="What kind of restaurant are you looking for?"
+              placeholder="Tell me what kind of restaurant you're looking for..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               className="resize-none flex-1"
