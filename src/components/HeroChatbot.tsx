@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './ui/button';
-import { Send } from 'lucide-react';
+import { Send, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -52,21 +52,40 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
     setIsLoading(true);
 
     try {
-      // Simulate loading response
-      setTimeout(() => {
-        setMessages(prev => [...prev, {
-          id: (Date.now() + 1).toString(),
-          content: "I'd love to help you with that! Let's continue this conversation in the full chat experience.",
-          role: 'assistant'
-        }]);
-        setIsLoading(false);
-        
-        // Navigate to chat after a brief delay
+      // Check if configuration is set
+      const googleSheetsApiKey = localStorage.getItem('google_sheets_api_key');
+      const googleSheetId = localStorage.getItem('google_sheet_id');
+      
+      if (!googleSheetsApiKey || !googleSheetId) {
         setTimeout(() => {
-          navigate('/chat');
-        }, 2000);
-        
-      }, 1000);
+          setMessages(prev => [...prev, {
+            id: (Date.now() + 1).toString(),
+            content: "Before we chat, you'll need to set up your Google Sheets configuration in the Settings page. Let me take you there.",
+            role: 'assistant'
+          }]);
+          setIsLoading(false);
+          
+          // Navigate to settings after a brief delay
+          setTimeout(() => {
+            navigate('/settings');
+          }, 3000);
+        }, 1000);
+      } else {
+        // Configuration exists, proceed to chat page
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            id: (Date.now() + 1).toString(),
+            content: "I'd love to help you with that! Let's continue this conversation in the full chat experience.",
+            role: 'assistant'
+          }]);
+          setIsLoading(false);
+          
+          // Navigate to chat after a brief delay
+          setTimeout(() => {
+            navigate('/chat');
+          }, 2000);
+        }, 1000);
+      }
     } catch (error) {
       console.error('Error processing message:', error);
       toast({

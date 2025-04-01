@@ -5,9 +5,18 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, AlertCircle } from "lucide-react";
 import { getRestaurantData } from '@/lib/googleSheets';
 import { sendMessageToGPT } from '@/lib/openai';
+import { Link } from 'react-router-dom';
+import { 
+  Card, 
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 
 interface Message {
   id: string;
@@ -25,10 +34,17 @@ const Chat = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isConfigured, setIsConfigured] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check if Google Sheets API and spreadsheet ID are configured
+    const googleSheetsApiKey = localStorage.getItem('google_sheets_api_key');
+    const googleSheetId = localStorage.getItem('google_sheet_id');
+    
+    setIsConfigured(!!googleSheetsApiKey && !!googleSheetId);
+    
     scrollToBottom();
   }, [messages]);
 
@@ -51,6 +67,10 @@ const Chat = () => {
     setIsLoading(true);
 
     try {
+      if (!isConfigured) {
+        throw new Error('Google Sheets API key or spreadsheet ID not set');
+      }
+
       // Get restaurant data from Google Sheets
       const restaurants = await getRestaurantData();
       
@@ -65,15 +85,72 @@ const Chat = () => {
       }]);
     } catch (error) {
       console.error('Error processing message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to get a response. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Handle missing configuration error specially
+      if (error.message === 'Google Sheets API key or spreadsheet ID not set') {
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          content: "I need access to restaurant data to help you. Please visit the Settings page to configure the Google Sheets API key and spreadsheet ID.",
+          role: 'assistant'
+        }]);
+      } else {
+        // Generic error
+        setMessages(prev => [...prev, {
+          id: (Date.now() + 1).toString(),
+          content: `I'm sorry, I encountered an error. ${error.message}`,
+          role: 'assistant'
+        }]);
+        
+        toast({
+          title: "Error",
+          description: "Failed to get a response. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!isConfigured) {
+    return (
+      <div className="min-h-screen bg-resty-background">
+        <Header />
+        <main className="container max-w-4xl mx-auto px-4 py-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-8 text-resty-primary">Chat with Resty</h1>
+          
+          <Card className="mb-8">
+            <CardHeader className="bg-amber-50 border-b">
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-amber-600" />
+                <span>Configuration Required</span>
+              </CardTitle>
+              <CardDescription>
+                Missing restaurant data configuration
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <p className="mb-4">
+                Before you can chat with Resty, you need to configure your Google Sheets API key and spreadsheet ID.
+                This will allow Resty to access restaurant data and provide recommendations.
+              </p>
+              <p>
+                Please visit the Settings page to configure these values.
+              </p>
+            </CardContent>
+            <CardFooter className="bg-gray-50 border-t">
+              <Link to="/settings">
+                <Button>
+                  Go to Settings
+                </Button>
+              </Link>
+            </CardFooter>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-resty-background flex flex-col">
