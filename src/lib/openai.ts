@@ -1,4 +1,3 @@
-
 import { Message, Restaurant, RestaurantCriteria } from '@/types/chat';
 
 // Function to extract restaurant criteria from user message
@@ -27,7 +26,9 @@ Analyze the conversation and extract the following criteria (if present):
 
 Return ONLY a JSON object with these fields. Do not include any explanation or other text.
 Example output: {"area":"Soho","cuisine":"Italian","priceLevel":"moderate","timeOfDay":"dinner","dayOfWeek":"Friday","partySize":4,"needsReservation":true}
-For any criteria not mentioned in the conversation, use null for that field.`;
+For any criteria not mentioned in the conversation, use null for that field.
+
+Important: Keep area and cuisine values very simple. For area, use neighborhood names only. For cuisine, use broad categories like "Italian", "Chinese", "Japanese", etc.`;
 
     // Prepare messages for the API call
     const messages = [
@@ -37,6 +38,7 @@ For any criteria not mentioned in the conversation, use null for that field.`;
     ];
 
     console.log('Sending criteria extraction request to OpenAI edge function...');
+    console.log('User message for criteria extraction:', message);
 
     // Call our edge function instead of OpenAI directly
     const response = await fetch('https://ajhbefztgrigzaddwvrb.supabase.co/functions/v1/openai-chat', {
@@ -85,6 +87,8 @@ For any criteria not mentioned in the conversation, use null for that field.`;
           return {};
         }
       }
+
+      console.log("Extracted criteria object:", criteriaObject);
       return criteriaObject as RestaurantCriteria;
     } catch (e) {
       console.error("Failed to parse criteria JSON:", data.content);
@@ -136,7 +140,7 @@ Be conversational and helpful. If you don't have enough information yet, ask fol
       { role: "user", content: message }
     ];
 
-    console.log('Sending request to OpenAI edge function...');
+    console.log('Sending request to OpenAI edge function with criteria:', JSON.stringify(criteria));
 
     // Call our edge function with both messages and restaurant data
     const response = await fetch('https://ajhbefztgrigzaddwvrb.supabase.co/functions/v1/openai-chat', {

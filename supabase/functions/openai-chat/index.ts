@@ -28,7 +28,7 @@ serve(async (req) => {
     }
 
     console.log('Calling OpenAI API with gpt-4o-mini...');
-    console.log('Filtering criteria:', criteria);
+    console.log('Filtering criteria:', JSON.stringify(criteria, null, 2));
     
     // Extract only a subset of restaurant data to reduce token count
     let processedRestaurants = restaurants;
@@ -43,6 +43,15 @@ serve(async (req) => {
         if (criteria.area && criteria.area !== null) {
           const areaLower = criteria.area.toLowerCase();
           console.log(`Filtering by area: ${areaLower}`);
+          
+          // First, log all available areas to debug
+          const uniqueAreas = new Set();
+          restaurants.forEach(r => {
+            if (r.area) uniqueAreas.add(r.area.toLowerCase());
+            if (r.neighborhood) uniqueAreas.add(r.neighborhood.toLowerCase());
+          });
+          console.log(`Available areas in database: ${Array.from(uniqueAreas).join(', ')}`);
+          
           filteredRestaurants = filteredRestaurants.filter(r => {
             const areaMatch = (r.area && r.area.toLowerCase().includes(areaLower)) ||
                             (r.neighborhood && r.neighborhood.toLowerCase().includes(areaLower));
@@ -58,6 +67,17 @@ serve(async (req) => {
         if (criteria.cuisine && criteria.cuisine !== null) {
           const cuisineLower = criteria.cuisine.toLowerCase();
           console.log(`Filtering by cuisine: ${cuisineLower}`);
+          
+          // First, log some available cuisines to debug
+          const uniqueCuisines = new Set();
+          restaurants.slice(0, 20).forEach(r => {
+            if (r.primary_type) uniqueCuisines.add(r.primary_type.toLowerCase());
+            if (r.types) {
+              r.types.toLowerCase().split(',').map(t => t.trim()).forEach(t => uniqueCuisines.add(t));
+            }
+          });
+          console.log(`Sample cuisines in database: ${Array.from(uniqueCuisines).join(', ')}`);
+          
           filteredRestaurants = filteredRestaurants.filter(r => {
             const cuisineMatch = (r.primary_type && r.primary_type.toLowerCase().includes(cuisineLower)) ||
                                 (r.types && r.types.toLowerCase().includes(cuisineLower));
