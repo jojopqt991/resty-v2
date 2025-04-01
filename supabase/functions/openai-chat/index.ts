@@ -98,46 +98,73 @@ serve(async (req) => {
             }
           });
           console.log(`All cuisines in database: ${Array.from(uniqueCuisines).join(', ')}`);
-          
-          // More flexible matching - try exact match first, then contains
-          let exactMatches = filteredRestaurants.filter(r => {
-            const cuisineExactMatch = 
-              (r.primary_type && r.primary_type.toLowerCase() === cuisineLower) ||
-              (r.types && r.types.toLowerCase().split(',').some(t => t.trim().toLowerCase() === cuisineLower));
+
+          // IMPROVED MATCHING: Check for more variations of the cuisine
+          // For example: "italian" should match "italian_restaurant", "italian_food", etc.
+          let matchingRestaurants = filteredRestaurants.filter(r => {
+            // Check primary_type for exact match
+            const primaryTypeMatch = r.primary_type && 
+                                    r.primary_type.toLowerCase() === cuisineLower;
             
-            if (cuisineExactMatch) {
-              console.log(`Exact cuisine match: ${r.name} - Primary: ${r.primary_type}, Types: ${r.types}`);
+            // Check types for any variant containing the cuisine word
+            const typesMatch = r.types && r.types.toLowerCase().split(',').some(t => {
+              const trimmed = t.trim();
+              return trimmed === cuisineLower || // Exact match
+                     trimmed.startsWith(cuisineLower + "_") || // Starts with cuisine_
+                     trimmed.endsWith("_" + cuisineLower) || // Ends with _cuisine
+                     trimmed.includes("_" + cuisineLower + "_"); // Contains _cuisine_ pattern
+            });
+            
+            // Check if types field contains the cuisine as a substring
+            const typesContain = r.types && 
+                              r.types.toLowerCase().includes(cuisineLower);
+            
+            const isMatch = primaryTypeMatch || typesMatch || typesContain;
+            
+            if (isMatch) {
+              console.log(`Cuisine match for "${cuisineLower}": ${r.name} - Primary: ${r.primary_type}, Types: ${r.types}`);
             }
-            return cuisineExactMatch;
+            
+            return isMatch;
           });
           
-          // If no exact matches, try partial matches
-          if (exactMatches.length === 0) {
-            console.log("No exact cuisine matches, trying partial matches...");
-            
-            filteredRestaurants = filteredRestaurants.filter(r => {
-              const cuisineMatch = 
-                (r.primary_type && r.primary_type.toLowerCase().includes(cuisineLower)) ||
-                (r.types && r.types.toLowerCase().includes(cuisineLower));
-              
-              if (cuisineMatch) {
-                console.log(`Cuisine partial match: ${r.name} - Primary: ${r.primary_type}, Types: ${r.types}`);
-              }
-              return cuisineMatch;
-            });
+          // Use the new matching results
+          if (matchingRestaurants.length > 0) {
+            console.log(`Found ${matchingRestaurants.length} cuisine matches for "${cuisineLower}"`);
+            filteredRestaurants = matchingRestaurants;
           } else {
-            filteredRestaurants = exactMatches;
-            console.log(`Found ${exactMatches.length} exact cuisine matches`);
+            console.log(`No cuisine matches found for "${cuisineLower}", using more flexible matching`);
+            
+            // Fallback to a more flexible matching approach
+            matchingRestaurants = filteredRestaurants.filter(r => {
+              const cuisineWords = cuisineLower.split(/\s+/);
+              const allText = ((r.primary_type || '') + ' ' + (r.types || '')).toLowerCase();
+              
+              const isMatch = cuisineWords.some(word => {
+                return word.length > 2 && allText.includes(word);
+              });
+              
+              if (isMatch) {
+                console.log(`Flexible cuisine match for "${cuisineLower}": ${r.name} - ${allText}`);
+              }
+              
+              return isMatch;
+            });
+            
+            if (matchingRestaurants.length > 0) {
+              filteredRestaurants = matchingRestaurants;
+              console.log(`Found ${matchingRestaurants.length} flexible cuisine matches`);
+            }
           }
           
           console.log(`After cuisine filter: ${filteredRestaurants.length} restaurants`);
         }
 
-        // If we have no matches but had criteria, this means our filtering is too strict 
+        // If we still have no matches but had criteria, try even more flexible matching
         if (filteredRestaurants.length === 0 && (criteria.area || criteria.cuisine)) {
           console.log('No restaurants matched strict criteria, trying more flexible matching...');
           
-          // Try again with more flexible matching
+          // Start with all restaurants again
           filteredRestaurants = restaurants;
           
           if (criteria.area) {
