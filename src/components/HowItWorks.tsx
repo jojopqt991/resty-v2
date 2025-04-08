@@ -5,25 +5,12 @@ interface StepProps {
   number: number;
   title: string;
   description: string;
-  imagePlaceholder: string;
   isEven: boolean;
 }
 
-const Step = ({ number, title, description, imagePlaceholder, isEven }: StepProps) => {
+const Step = ({ number, title, description, isEven }: StepProps) => {
   return (
     <div className={`flex flex-col ${isEven ? 'md:flex-row-reverse' : 'md:flex-row'} gap-6 md:gap-12 items-center mb-16`}>
-      <div 
-        className={`w-full md:w-1/2 animate-slide-in-right`}
-        style={{ animationDelay: `${number * 100}ms` }}
-      >
-        <div className="bg-white p-4 rounded-xl shadow-md aspect-video flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl mb-2">{imagePlaceholder}</div>
-            <p className="text-gray-500">Step {number} interface preview</p>
-          </div>
-        </div>
-      </div>
-      
       <div className="w-full md:w-1/2">
         <div className="flex items-center mb-3">
           <div className="bg-resty-primary text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg">
@@ -74,7 +61,6 @@ const HowItWorks = () => {
               number={index + 1}
               title={step.title}
               description={step.description}
-              imagePlaceholder={['🗣️', '📋', '📅', '🍽️'][index]}
               isEven={index % 2 !== 0}
             />
           ))}
