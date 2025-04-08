@@ -18,7 +18,7 @@ const Hero = () => {
       <div className="container-custom grid md:grid-cols-2 gap-8 md:gap-12 items-center">
         <div className="space-y-6 md:pr-8">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-resty-text leading-tight">
-            Discover Your Perfect Meal with <span className="text-resty-primary">Resty</span>
+            Discover & Book<br />Restaurants with <span className="text-resty-primary">Resty</span>
           </h1>
           <p className="text-lg md:text-xl text-gray-600">
             Your personal AI restaurant concierge helping you find and book the best restaurants tailored to your taste.
