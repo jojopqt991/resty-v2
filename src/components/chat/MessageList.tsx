@@ -33,17 +33,18 @@ const MessageList = ({ messages }: MessageListProps) => {
         // Check if this line is a restaurant bullet point
         if (line.trim().startsWith('•')) {
           // Extract the restaurant name and description
-          // Match pattern like "• Restaurant Name - Description"
-          const bulletPoint = line.match(/^(\s*•\s+)([^-]+)(-\s*)(.*)/);
+          // Match any pattern that might include restaurant name and description
+          // This improved regex handles both bolded and non-bolded restaurant names
+          const bulletPoint = line.match(/^(\s*•\s+)(?:\*\*)?([^-*]+?)(?:\*\*)?(-\s*)(.*)/);
           
           if (bulletPoint) {
-            // Extract the restaurant name and description
+            // Extract the restaurant name and description, removing any markdown
             const [, bullet, name, separator, description] = bulletPoint;
             return (
               <div key={index} className="flex items-start my-2">
                 <span className="mr-2">{bullet}</span>
                 <div>
-                  <span className="font-bold text-resty-primary">{name}</span>
+                  <span className="font-bold text-resty-primary">{name.trim()}</span>
                   {separator}
                   <span>{description}</span>
                 </div>
@@ -76,7 +77,8 @@ const MessageList = ({ messages }: MessageListProps) => {
       
       const formattedLines = lines.map((line, index) => {
         // Check if this line is a restaurant recommendation (starts with a number and period)
-        const restaurantMatch = line.match(/^(\d+\.\s+)([A-Za-z\s\-']+):(.*)/);
+        // Also handle potential markdown in restaurant names
+        const restaurantMatch = line.match(/^(\d+\.\s+)(?:\*\*)?([A-Za-z\s\-']+?)(?:\*\*)?:(.*)/);
         
         if (restaurantMatch) {
           // Extract the restaurant name and description
@@ -84,7 +86,8 @@ const MessageList = ({ messages }: MessageListProps) => {
           return (
             <div key={index} className="my-2">
               <span className="font-bold">{number}</span>
-              <span className="font-bold text-resty-primary">{name}:</span>
+              <span className="font-bold text-resty-primary">{name.trim()}</span>
+              <span>:</span>
               <span>{description}</span>
             </div>
           );
