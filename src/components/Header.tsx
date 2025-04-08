@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,19 +25,23 @@ const Header = () => {
     };
   }, []);
 
+  const handleStartChatting = () => {
+    navigate('/chat');
+  };
+
   const navLinks = [
-    { name: 'Home', href: '#home' },
-    { name: 'How It Works', href: '#how-it-works' },
-    { name: 'Cuisines', href: '#cuisines' },
-    { name: 'Testimonials', href: '#testimonials' },
+    { name: 'Home', href: '/' },
+    { name: 'How It Works', href: '/#how-it-works' },
+    { name: 'Cuisines', href: '/#cuisines' },
+    { name: 'Testimonials', href: '/#testimonials' },
   ];
 
   return (
     <nav className={`navbar ${scrolled ? 'shadow-sm' : ''}`}>
       <div className="container-custom flex justify-between items-center h-16 md:h-20">
-        <a href="#" className="text-2xl md:text-3xl font-bold text-resty-primary">
+        <Link to="/" className="text-2xl md:text-3xl font-bold text-resty-primary">
           Resty
-        </a>
+        </Link>
 
         {/* Mobile menu button */}
         <div className="md:hidden">
@@ -46,15 +53,18 @@ const Header = () => {
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-8">
           {navLinks.map((link) => (
-            <a 
+            <Link 
               key={link.name} 
-              href={link.href} 
+              to={link.href} 
               className="text-resty-text hover:text-resty-primary transition-colors"
             >
               {link.name}
-            </a>
+            </Link>
           ))}
-          <Button className="bg-resty-primary hover:bg-resty-primary/90 text-white">
+          <Button 
+            className="bg-resty-primary hover:bg-resty-primary/90 text-white"
+            onClick={handleStartChatting}
+          >
             Start Chatting
           </Button>
         </div>
@@ -65,18 +75,21 @@ const Header = () => {
         <div className="md:hidden absolute top-16 left-0 right-0 bg-white p-4 shadow-md border-t z-50">
           <div className="flex flex-col space-y-4">
             {navLinks.map((link) => (
-              <a 
+              <Link
                 key={link.name} 
-                href={link.href} 
+                to={link.href} 
                 className="text-resty-text py-2 hover:text-resty-primary"
                 onClick={() => setIsOpen(false)}
               >
                 {link.name}
-              </a>
+              </Link>
             ))}
             <Button 
               className="bg-resty-primary hover:bg-resty-primary/90 text-white w-full mt-2"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                handleStartChatting();
+              }}
             >
               Start Chatting
             </Button>
