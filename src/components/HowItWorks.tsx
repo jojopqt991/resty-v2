@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MessageCircle, ListChecked, Calendar, Utensils } from 'lucide-react';
+import { MessageCircle, ListCheck, Calendar, Utensils } from 'lucide-react';
 
 interface StepProps {
   number: number;
@@ -38,7 +38,7 @@ const HowItWorks = () => {
     {
       title: "Browse",
       description: "Review personalized restaurant options with ratings, reviews, and menu highlights.",
-      icon: <ListChecked className="w-6 h-6 text-resty-primary" />
+      icon: <ListCheck className="w-6 h-6 text-resty-primary" />
     },
     {
       title: "Book",
