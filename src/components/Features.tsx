@@ -15,7 +15,7 @@ const FeatureCard = ({ icon, title, description, delay }: FeatureCardProps) => {
       className="feature-card animate-fade-in" 
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="mb-4 inline-block p-3 bg-resty-accent/20 rounded-full text-resty-primary">
+      <div className="mb-4 inline-block p-3 bg-resty-accent/30 rounded-full text-resty-primary">
         {icon}
       </div>
       <h3 className="text-xl font-semibold mb-2 text-resty-text">{title}</h3>

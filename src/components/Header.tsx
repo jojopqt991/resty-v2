@@ -62,7 +62,7 @@ const Header = () => {
             </Link>
           ))}
           <Button 
-            className="bg-resty-primary hover:bg-resty-primary/90 text-white"
+            className="bg-resty-primary hover:bg-resty-primary/90 text-white font-medium"
             onClick={handleStartChatting}
           >
             Start Chatting
@@ -85,7 +85,7 @@ const Header = () => {
               </Link>
             ))}
             <Button 
-              className="bg-resty-primary hover:bg-resty-primary/90 text-white w-full mt-2"
+              className="bg-resty-primary hover:bg-resty-primary/90 text-white w-full mt-2 font-medium"
               onClick={() => {
                 setIsOpen(false);
                 handleStartChatting();

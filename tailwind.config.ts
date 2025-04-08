@@ -54,11 +54,11 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				resty: {
-					primary: '#E07A5F',    // Warm terracotta
-					secondary: '#81B29A',  // Soft sage green
-					accent: '#F2CC8F',     // Butter yellow
-					background: '#F7EDE2', // Light cream
-					text: '#3D405B',       // Charcoal
+					primary: '#FF5E14',    // Bright orange like in the image
+					secondary: '#36D7B7',  // Brighter teal
+					accent: '#FFD166',     // Brighter yellow
+					background: '#F9F7F5', // Lighter cream
+					text: '#2D3047',       // Slightly more vibrant dark blue
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

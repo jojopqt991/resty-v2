@@ -26,7 +26,7 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <Button 
               size="lg" 
-              className="bg-resty-primary hover:bg-resty-primary/90 text-white"
+              className="bg-resty-primary hover:bg-resty-primary/90 text-white font-medium"
               onClick={handleChatClick}
             >
               Chat with Resty
@@ -34,7 +34,7 @@ const Hero = () => {
             <Button 
               variant="outline" 
               size="lg" 
-              className="border-resty-primary text-resty-primary hover:bg-resty-primary/10"
+              className="border-resty-primary text-resty-primary hover:bg-resty-primary/10 font-medium"
               onClick={handleChatClick}
             >
               Learn More
@@ -43,7 +43,6 @@ const Hero = () => {
         </div>
         
         <div className="relative">
-          {/* Replace the animation placeholder with the actual chatbot */}
           <HeroChatbot className="w-full h-64 md:h-96" />
           
           {/* Decorative elements */}

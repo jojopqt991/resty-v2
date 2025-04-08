@@ -122,7 +122,7 @@ const HeroChatbot = ({ className = '' }: HeroChatbotProps) => {
           type="submit" 
           size="sm"
           disabled={isLoading || input.trim() === ''}
-          className="px-3"
+          className="px-3 bg-resty-primary hover:bg-resty-primary/90"
         >
           <Send className="h-4 w-4" />
         </Button>
